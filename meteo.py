@@ -1,27 +1,34 @@
-def moyenne(valeurs):
-    return sum(valeurs) / len(valeurs)
+def moyenne(releves):
+    return sum(releves.values()) / len(releves)
 
-def maximale(valeurs, jours):
-    maxi = valeurs[0]
-    jour_max = jours[0]
-    for i in range(len(valeurs)):
-        if valeurs[i] > maxi:
-            maxi = valeurs[i]
-            jour_max = jours[i]
+def maximale(releves):
+    maxi = -float('inf')
+    jour_max = None
+    for jour, temp in releves.items():
+        if temp > maxi:
+            maxi = temp
+            jour_max = jour
     return maxi, jour_max
 
-def jours_au_dessus(valeurs, seuil):
+def jours_au_dessus(releves, seuil):
     resultat = 0
-    for i in range(len(valeurs)):
-        if valeurs[i] > seuil:
+    for temp in releves.values():
+        if temp > seuil:
             resultat += 1
     return resultat
 
-temp = [12, 15, 9, 11, 7, 13, 12]
-jours = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
-m = moyenne(temp)
+releves = {
+    "lundi": 12,
+    "mardi": 15,
+    "mercredi": 9,
+    "jeudi": 11,
+    "vendredi": 7,
+    "samedi": 13,
+    "dimanche": 12
+}
+m = moyenne(releves)
 print(f"La moyenne est de {m:.1f}")
-maxi, jour = maximale(temp, jours)
+maxi, jour = maximale(releves)
 print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
-nb = jours_au_dessus(temp, m)
+nb = jours_au_dessus(releves, m)
 print(f"Nombre de jours au-dessus de la moyenne : {nb}")
