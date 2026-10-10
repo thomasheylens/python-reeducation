@@ -98,13 +98,13 @@ def charger_releves():
         print(f"Erreur lors de la récupération des données météo: {e}")
         exit(1)
 
-releves = charger_releves()
-m = moyenne(releves)
-maxi, jour = maximale(releves)
-nb = jours_au_dessus(releves, m)
-froid, jour_froid = jour_le_plus_froid(releves)
-print(f"La moyenne est de {m:.1f}")
-print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
-print(f"Nombre de jours au-dessus de la moyenne : {nb}")
-print(f"Le jour le plus froid est {jour_froid} avec {froid}°C")
-
+if __name__ == "__main__":
+    releves = charger_releves()
+    m = moyenne(releves)
+    maxi, jour = maximale(releves)
+    nb = jours_au_dessus(releves, m)
+    froid, jour_froid = jour_le_plus_froid(releves)
+    print(f"La moyenne est de {m:.1f}")
+    print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
+    print(f"Nombre de jours au-dessus de la moyenne : {nb}")
+    print(f"Le jour le plus froid est {jour_froid} avec {froid}°C")
