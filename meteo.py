@@ -68,11 +68,9 @@ def jour_le_plus_froid(releves):
 
 def charger_releves():
     """Charge les relevés de température pour Toulon via Open-Meteo.
-
     Returns:
         dict: Dictionnaire {date: température} pour les 7 derniers jours.
               La température est la moyenne de la temp max et min de chaque jour.
-
     Raises:
         SystemExit: Si l'appel API échoue.
     """
