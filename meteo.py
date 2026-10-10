@@ -97,7 +97,8 @@ def charger_releves(ville="Toulon"):
     Args:
         ville: Nom de la ville (str). Toulon par défaut.
     Returns:
-        dict: Dictionnaire {date: température} pour les 7 derniers jours.
+        dict: Dictionnaire {date: température} pour les 14 jours
+              (7 jours passés et 7 jours à venir).
               La température est la moyenne de la temp max et min de chaque jour.
     Raises:
         ValueError: Si la ville est introuvable.
@@ -107,7 +108,7 @@ def charger_releves(ville="Toulon"):
     url = (
         "https://api.open-meteo.com/v1/forecast?"
         f"latitude={latitude}&longitude={longitude}&timezone=Europe/Paris"
-        "&daily=temperature_2m_max,temperature_2m_min&past_days=7"
+        "&daily=temperature_2m_max,temperature_2m_min&past_days=7&forecast_days=7"
     )
 
     try:
