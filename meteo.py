@@ -1,12 +1,9 @@
 def moyenne(releves):
     """Calcule la température moyenne à partir d'un dictionnaire de relevés.
-
     Args:
         releves: Dictionnaire {jour: température} (ex: {'lundi': 20.5}).
-
     Returns:
         float: Température moyenne en °C.
-
     Raises:
         ValueError: Si le dictionnaire est vide.
     """
@@ -16,13 +13,10 @@ def moyenne(releves):
 
 def maximale(releves):
     """Trouve la température maximale et le jour correspondant.
-
     Args:
         releves: Dictionnaire {jour: température}.
-
     Returns:
         tuple: (température_max, jour) où température_max est la plus haute température.
-
     Raises:
         ValueError: Si le dictionnaire est vide.
     """
@@ -38,11 +32,9 @@ def maximale(releves):
 
 def jours_au_dessus(releves, seuil):
     """Compte les jours où la température dépasse le seuil.
-
     Args:
         releves: Dictionnaire {jour: température}.
         seuil: Température seuil en °C (float).
-
     Returns:
         int: Nombre de jours strictement au-dessus du seuil.
     """
@@ -54,13 +46,10 @@ def jours_au_dessus(releves, seuil):
 
 def jour_le_plus_froid(releves):
     """Trouve la température minimale et le jour correspondant.
-
     Args:
         releves: Dictionnaire {jour: température}.
-
     Returns:
         tuple: (température_min, jour) où température_min est la plus basse température.
-
     Raises:
         ValueError: Si le dictionnaire est vide.
     """
@@ -84,10 +73,10 @@ releves = {
     "dimanche": 12
 }
 m = moyenne(releves)
-print(f"La moyenne est de {m:.1f}")
 maxi, jour = maximale(releves)
-print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
 nb = jours_au_dessus(releves, m)
-print(f"Nombre de jours au-dessus de la moyenne : {nb}")
 froid, jour_froid = jour_le_plus_froid(releves)
+print(f"La moyenne est de {m:.1f}")
+print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
+print(f"Nombre de jours au-dessus de la moyenne : {nb}")
 print(f"Le jour le plus froid est {jour_froid} avec {froid}°C")
