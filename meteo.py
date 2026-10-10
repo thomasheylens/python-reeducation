@@ -88,7 +88,7 @@ def localiser(ville: str) -> tuple[float, float]:
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        raise RuntimeError(f"Échec du géocodage : {e}")
+        raise RuntimeError(f"Échec du géocodage : {e}") from e
     resultats = data.get('results')
     if not resultats:
         raise ValueError(f"Ville introuvable : {ville}")
@@ -125,7 +125,7 @@ def charger_releves(
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        raise RuntimeError(f"Échec de la récupération des données météo : {e}")
+        raise RuntimeError(f"Échec de la récupération des données météo : {e}") from e
 
     dates = data['daily']['time']
     temp_max = data['daily']['temperature_2m_max']
