@@ -1,3 +1,4 @@
+import json
 import pytest
 from unittest.mock import patch
 import urllib.error
@@ -37,7 +38,7 @@ def test_charger_releves():
             "temperature_2m_min": [2, 3, 5, 7, 6, 4, 3],
         }
     }
-    corps = __import__("json").dumps(fausse_reponse).encode("utf-8")
+    corps = json.dumps(fausse_reponse).encode("utf-8")
     with patch("urllib.request.urlopen") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value.read.return_value = corps
         releves = charger_releves()
