@@ -19,13 +19,16 @@ commencer — pas plus, pas moins ;
 (3) crée une branche séparée pour la modification (nom explicite, depuis
 main à jour) ;
 (4) code, vérifie, teste et exécute les lignes de commande tout seul, sans
-me demander d'autorisation à aucune étape — y compris git add et commit ;
+me demander d'autorisation à aucune étape — y compris git add, commit et le
+push de ta branche (git push -u origin nom-de-branche) ;
 (5) une fois terminé, synthétise ce que tu as fait, redémarre le serveur
 si la modification l'exige, et donne-moi le lien à cliquer pour tester.
 
 **GARDE-FOU** : Aucune modification hors du périmètre demandé. Ne touche
 jamais à des fichiers non concernés par la consigne. La suite de tests
 doit être verte avant tout commit. Tu travailles sur ta branche, jamais
-directement sur main : fusionner vers main et pousser sur GitHub reste
-mon geste, sur ma demande explicite. Si tu n'es pas certain du périmètre,
+directement sur main : la branche est poussée sur le distant pour garder
+la trace du canal. La fusion vers main utilise --no-ff pour laisser un
+commit de fusion explicite, et reste mon geste, sur ma demande explicite ;
+je supprime ensuite la branche fusionnée en local et sur le distant. Si tu n'es pas certain du périmètre,
 demande avant d'agir.
