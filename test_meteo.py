@@ -2,7 +2,8 @@ import json
 import pytest
 from unittest.mock import patch
 import urllib.error
-from meteo import moyenne, maximale, jours_au_dessus, jour_le_plus_froid, charger_releves
+from meteo import (moyenne, maximale, jours_au_dessus, jour_le_plus_froid,
+                   charger_releves, localiser)
 
 def test_moyenne():
     releves = {"2024-01-01": 10.0, "2024-01-02": 20.0, "2024-01-03": 30.0}
@@ -28,6 +29,24 @@ def test_jour_le_plus_froid():
     with pytest.raises(ValueError):
         jour_le_plus_froid({})
 
+def test_localiser():
+    """Vérifie le déballage du géocodage avec une réponse figée : aucun appel réseau."""
+    fausse_reponse = {"results": [{"latitude": 43.12, "longitude": 5.93}]}
+    corps = json.dumps(fausse_reponse).encode("utf-8")
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_urlopen.return_value.__enter__.return_value.read.return_value = corps
+        latitude, longitude = localiser("Toulon")
+    assert latitude == 43.12
+    assert longitude == 5.93
+
+def test_localiser_introuvable():
+    fausse_reponse = {"results": []}
+    corps = json.dumps(fausse_reponse).encode("utf-8")
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_urlopen.return_value.__enter__.return_value.read.return_value = corps
+        with pytest.raises(ValueError):
+            localiser("Xyzkjh")
+
 def test_charger_releves():
     """Vérifie le déballage du JSON avec une réponse figée : aucun appel réseau."""
     fausse_reponse = {
@@ -39,11 +58,19 @@ def test_charger_releves():
         }
     }
     corps = json.dumps(fausse_reponse).encode("utf-8")
-    with patch("urllib.request.urlopen") as mock_urlopen:
+    with patch("meteo.localiser", return_value=(43.12, 5.93)), \
+         patch("urllib.request.urlopen") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value.read.return_value = corps
-        releves = charger_releves()
+        releves = charger_releves("Toulon")
     assert len(releves) == 7
     assert releves["2024-01-04"] == 11.5  # (16 + 7) / 2
+
+def test_charger_releves_erreur():
+    with patch("meteo.localiser", return_value=(43.12, 5.93)), \
+         patch('urllib.request.urlopen') as mock_urlopen:
+        mock_urlopen.side_effect = urllib.error.URLError("Échec de connexion")
+        with pytest.raises(RuntimeError):
+            charger_releves()
 
 def test_dictionnaire_vide():
     with pytest.raises(ValueError):
@@ -74,9 +101,3 @@ def test_jour_le_plus_froid_egalite():
     min_temp, min_jour = jour_le_plus_froid({"2024-01-01": 5.0, "2024-01-02": 5.0, "2024-01-03": 10.0})
     assert min_temp == 5.0
     assert min_jour == "2024-01-01"
-
-def test_charger_releves_erreur():
-    with patch('urllib.request.urlopen') as mock_urlopen:
-        mock_urlopen.side_effect = urllib.error.URLError("Échec de connexion")
-        with pytest.raises(SystemExit):
-            charger_releves()

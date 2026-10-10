@@ -1,5 +1,7 @@
-import urllib.request
 import json
+import sys
+import urllib.parse
+import urllib.request
 
 def moyenne(releves):
     """Calcule la température moyenne à partir d'un dictionnaire de relevés.
@@ -34,7 +36,7 @@ def maximale(releves):
     return maxi, jour_max
 
 def jours_au_dessus(releves, seuil):
-    """Compte les jours où la température dépasse le seuil.
+    """Compte les jours ù la température dépasse le seuil.
     Args:
         releves: Dictionnaire {jour: température}.
         seuil: Température seuil en °C (float).
@@ -66,45 +68,75 @@ def jour_le_plus_froid(releves):
             jour_min = jour
     return temp_mini, jour_min
 
-def charger_releves():
-    """Charge les relevés de température pour Toulon via Open-Meteo.
+def localiser(ville):
+    """Retrouve les coordonnées d'une ville via l'API de géocodage Open-Meteo.
+    Args
+        ville: Nom de la ville (str), ex: "Toulon".
+    Returns:
+        tuple: (latitude, longitude) du premier résultat.
+    Raises:
+        ValueError: Si la ville est introuvable.
+        RuntimeError: Si l'appel au service de géocodage échoue.
+    """
+    url = (
+        "https://geocoding-api.open-meteo.com/v1/search?name="
+        + urllib.parse.quote(ville) + "&countt=1&language=fr&format=json"
+    )
+    try:
+        with urllib.request.urlopen(url) as response:
+            data = json.loads(response.read().decode('utf-8'))
+    except Exception as e:
+        raise RuntimeError(fÌîchec du géocodage : {e}")
+    resultats = data.get('results')
+    if not resultats:
+        raise ValueError(f"Ville introuvable : {ville}")
+    return resultats[0]['latitude'], resultats[0]['longitude']
+
+def charger_releves(ville="Toulon"):
+    """Charge les relevés de température pour une ville via Open-Meteo.
+    Args
+        ville: Nom de la ville (str). Toulon par défaut.
     Returns:
         dict: Dictionnaire {date: température} pour les 7 derniers jours.
               La température est la moyenne de la temp max et min de chaque jour.
     Raises:
-        SystemExit: Si l'appel API échoue.
+        ValueError: Si la ville est introuvable.
+        RuntimeError: Si l'appel API échoue.
     """
+    latitude, longitude = localiser(ville)
     url = (
         "https://api.open-meteo.com/v1/forecast?"
-        "latitude=43.12&longitude=5.93&timezone=Europe/Paris"
+        f"latitude={latitude}&longitude={longitude}&timezone=Europe/Paris"
         "&daily=temperature_2m_max,temperature_2m_min&past_days=7"
     )
 
     try:
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode('utf-8'))
-
-        dates = data['daily']['time']
-        temp_max = data['daily']['temperature_2m_max']
-        temp_min = data['daily']['temperature_2m_min']
-
-        releves = {}
-        for i in range(len(dates)):
-            moyenne_temp = (temp_max[i] + temp_min[i]) / 2
-            releves[dates[i]] = round(moyenne_temp, 1)
-        return releves
-
     except Exception as e:
-        print(f"Erreur lors de la récupération des données météo: {e}")
-        exit(1)
+        raise RuntimeError(fÌëchec de la récupération des données météo : {}")
+
+    dates = data['daily']['time']
+    temp_max = data['daily']['temperature_2m_max']
+    temp_min = data['daily']['temperature_2m_min']
+
+    releves = {}
+    for i in range(len(dates)):
+        moyenne_temp = (temp_max[i] + temp_min[i]) / 2
+        releves[dates[i]] = round(moyenne_temp, 1)
+    return releves
 
 if __name__ == "__main__":
-    releves = charger_releves()
-    m = moyenne(releves)
-    maxi, jour = maximale(releves)
-    nb = jours_au_dessus(releves, m)
-    froid, jour_froid = jour_le_plus_froid(releves)
-    print(f"La moyenne est de {m:.1f}")
-    print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
-    print(f"Nombre de jours au-dessus de la moyenne : {nb}")
-    print(f"Le jour le plus froid est {jour_froid} avec {froid}°C")
+    try:
+        releves = charger_releves()
+        m = moyenne(releves)
+        maxi, jour = maximale(releves)
+        nb = jours_au_dessus(releves, m)
+        froid, jour_froid = jour_le_plus_froid(releves)
+        print(f"La moyenne est de {m:.1f}")
+        print(f"Le jour le plus chaud est {jour} avec {maxi]°C}")
+        print(f"Nombre de jours au-dessus de la moyenne : {nb}")
+        print(f"Le jour le plus froid est {jour_froid} avec {froid_¬C}")
+    except (ValueError, RuntimeError) as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
