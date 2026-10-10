@@ -52,9 +52,11 @@ def test_charger_releves():
     fausse_reponse = {
         "daily": {
             "time": ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04",
-                     "2024-01-05", "2024-01-06", "2024-01-07"],
-            "temperature_2m_max": [10, 12, 14, 16, 15, 13, 11],
-            "temperature_2m_min": [2, 3, 5, 7, 6, 4, 3],
+                     "2024-01-05", "2024-01-06", "2024-01-07", "2024-01-08",
+                     "2024-01-09", "2024-01-10", "2024-01-11", "2024-01-12",
+                     "2024-01-13", "2024-01-14"],
+            "temperature_2m_max": [10, 12, 14, 16, 15, 13, 11, 10, 12, 14, 15, 16, 14, 12],
+            "temperature_2m_min": [2, 3, 5, 7, 6, 4, 3, 2, 4, 6, 7, 8, 6, 4],
         }
     }
     corps = json.dumps(fausse_reponse).encode("utf-8")
@@ -62,7 +64,7 @@ def test_charger_releves():
          patch("urllib.request.urlopen") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value.read.return_value = corps
         releves = charger_releves("Toulon")
-    assert len(releves) == 7
+    assert len(releves) == 14
     assert releves["2024-01-04"] == 11.5  # (16 + 7) / 2
 
 def test_charger_releves_erreur():
