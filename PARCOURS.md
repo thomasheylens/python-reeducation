@@ -24,6 +24,8 @@ Journal de bord du projet `python-reeducation` : réapprentissage de Python, acc
 
 **Documentation pour un lecteur externe** — Réécriture complète du README selon un plan que j'ai conçu : présentation en trois phrases, fonctionnalités sans aucun nom de fonction (compréhensibles par un non-initié), installation avec commandes copiables, tests décrits en langage clair, choix techniques argumentés. Relecture avec trois critères : exactitude factuelle, test du non-initié, cohérence avec les tests réels.
 
+**Revue externe et accès connecteur** — Première revue complète du dépôt par l'agent via le connecteur GitHub : lecture du code, des tests, de l'historique et de la documentation sans intermédiaire. Trois anomalies détectées et corrigées après validation explicite des diffs : exécution isolée dans un bloc principal (l'importation ne déclenche plus d'appel réseau), exactitude factuelle du README (URL réelle, suppression d'une dépendance inexistante), et test de chargement simulé rendant la suite indépendante du réseau. La charte de gouvernance s'applique désormais au collaborateur-agent comme à un relecteur externe : aucune modification poussée sans accord explicite.
+
 ## Lecture d'ensemble
 
 La trajectoire se lit en quatre mouvements : outillage, méthode de collaboration, technique (dictionnaires, API, tests), puis communication (documentation). Le fil conducteur est constant : déléguer l'exécution, conserver la décision — l'arbitrage technique et la vérification finale restent les miens à chaque étape. C'est la position du chef de projet technique que je vise.
