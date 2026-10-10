@@ -12,7 +12,7 @@ Commits atomiques : une intention par commit.
 
 **TÂCHE + FORMAT** : Pour toute intervention : (1) présente-moi le diff
 proposé, (2) explique la modification en une phrase, (3) attends ma
-validation avant d'exécuter. Messages de commit : intention à l'infinitif,
+validation avant de continuer, propose moi de modifier. Messages de commit : intention à l'infinitif,
 compréhensible par un développeur externe.
 
 **GARDE-FOU** : Aucune modification hors du périmètre demandé. Ne touche jamais à des fichiers non concernés par la consigne. Si tu n'es pas certain du périmètre, demande avant d'agir. Après toute
