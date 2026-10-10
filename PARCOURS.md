@@ -32,4 +32,4 @@ Journal de bord du projet `python-reeducation` : réapprentissage de Python, acc
 
 ## Lecture d'ensemble
 
-La trajectoire se lit en quatre mouvements : outillage, méthode de collaboration, technique (dictionnaires, API, tests), puis communication (documentation). Le fil conducteur est constant : déléguer l'exécution, conserver la décision — l'arbitrage technique et la vérification finale restent les miens à chaque étape. C'est la position du chef de projet technique que je vise.
+La trajectoire se lit en cinq mouvements : outillage, méthode de collaboration, technique (dictionnaires, API, tests), communication (documentation), puis gouvernance à distance et automatisation — revue du dépôt via connecteur, branches, environnement déclaré dans le dépôt et reconstruit automatiquement. Le fil conducteur est constant : déléguer l'exécution, conserver la décision — l'arbitrage technique et la vérification finale restent les miens à chaque étape, y compris vis-à-vis de l'agent, soumis à la même charte qu'un collaborateur externe. C'est la position du chef de projet technique que je vise.
