@@ -53,13 +53,14 @@
 <script>
 // La carte est créée une seule fois, dès le chargement de la page
 const carte = L.map("carte").setView([46.6, 2.4], 5); // Vue d'ensemble sur la France
-// Deux fonds de carte prêts à l'emploi : jour (OpenStreetMap) et nuit (CARTO sombre)
+// Deux fonds de carte prêts à l'emploi : jour (OpenStreetMap) et nuit (Esri gris foncé)
 // Les tuiles sont de simples URL : aucune bibliothèque externe n'est ajoutée
 const coucheJour = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 });
-const coucheNuit = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+// Esri impose l'ordre {z}/{y}/{x} (y avant x) ; ce fond sombre est gratuit et sans clé API
+const coucheNuit = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+  attribution: '&copy; <a href="https://www.esri.com/">Esri</a>'
 });
 // Par défaut, c'est le fond de jour qui est affiché
 coucheJour.addTo(carte);

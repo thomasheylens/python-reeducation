@@ -15,7 +15,7 @@ def test_page_accueil_mode_nuit():
     assert response.status_code == 200
     assert b'id="mode-nuit"' in response.data
     assert b"Mode nuit" in response.data
-    assert b"dark_all" in response.data
+    assert b"World_Dark_Gray_Base" in response.data
 
 def test_temperatures_succes():
     releves = {"2024-01-01": 10.0, "2024-01-02": 12.5}
