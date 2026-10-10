@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Météo — températures des 7 derniers jours</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+  form { display: flex; gap: 0.5rem; }
+  input { flex: 1; padding: 0.5rem; font-size: 1rem; }
+  button { padding: 0.5rem 1rem; font-size: 1rem; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 0.4rem 0; border-bottom: 1px solid #eee; }
+  .erreur { color: #b00; }
+</style>
+</head>
+<body>
+<h1>Températures des 7 derniers jours</h1>
+<form id="recherche">
+  <input id="ville" placeholder="Nom d'une ville" value="Toulon">
+  <button type="submit">Afficher</button>
+</form>
+<p class="erreur" id="erreur"></p>
+<ul id="resultats"></ul>
+<script>
+document.getElementById("recherche").addEventListener("submit", async (evenement) => {
+  evenement.preventDefault();
+  const ville = document.getElementById("ville").value.trim();
+  const liste = document.getElementById("resultats");
+  const erreur = document.getElementById("erreur");
+  liste.innerHTML = "";
+  erreur.textContent = "";
+  const reponse = await fetch("/temperatures?ville=" + encodeURIComponent(ville));
+  const data = await response.json();
+  if (!response.ok) {
+    erreur.textContent = data.erreur;
+    return;
+  }
+  for (const [jour, temp] of Object.entries(data.releves)) {
+    const element = document.createElement("li");
+    element.textContent = jour + " : " + temp + " ¬C";
+    liste.appendChild(element);
+  }
+});
+</script>
+</body>
+</html>
