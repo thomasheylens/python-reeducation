@@ -1,3 +1,6 @@
+import urllib.request
+import json
+
 def moyenne(releves):
     """Calcule la température moyenne à partir d'un dictionnaire de relevés.
     Args:
@@ -63,15 +66,41 @@ def jour_le_plus_froid(releves):
             jour_min = jour
     return temp_mini, jour_min
 
-releves = {
-    "lundi": 12,
-    "mardi": 15,
-    "mercredi": 9,
-    "jeudi": 11,
-    "vendredi": 7,
-    "samedi": 13,
-    "dimanche": 12
-}
+def charger_releves():
+    """Charge les relevés de température pour Toulon via Open-Meteo.
+
+    Returns:
+        dict: Dictionnaire {date: température} pour les 7 derniers jours.
+              La température est la moyenne de la temp max et min de chaque jour.
+
+    Raises:
+        SystemExit: Si l'appel API échoue.
+    """
+    url = (
+        "https://api.open-meteo.com/v1/forecast?"
+        "latitude=43.12&longitude=5.93&timezone=Europe/Paris"
+        "&daily=temperature_2m_max,temperature_2m_min&past_days=7"
+    )
+
+    try:
+        with urllib.request.urlopen(url) as response:
+            data = json.loads(response.read().decode('utf-8'))
+
+        dates = data['daily']['time']
+        temp_max = data['daily']['temperature_2m_max']
+        temp_min = data['daily']['temperature_2m_min']
+
+        releves = {}
+        for i in range(len(dates)):
+            moyenne_temp = (temp_max[i] + temp_min[i]) / 2
+            releves[dates[i]] = round(moyenne_temp, 1)
+        return releves
+
+    except Exception as e:
+        print(f"Erreur lors de la récupération des données météo: {e}")
+        exit(1)
+
+releves = charger_releves()
 m = moyenne(releves)
 maxi, jour = maximale(releves)
 nb = jours_au_dessus(releves, m)
