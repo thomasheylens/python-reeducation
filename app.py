@@ -1,21 +1,23 @@
-from flask import Flask, jsonify, render_template, request
+from __future__ import annotations
+
+from flask import Flask, Response, jsonify, render_template, request
 
 from meteo import charger_releves, localiser
 
 app = Flask(__name__)
 
 @app.route("/")
-def index():
+def index() -> str:
     return render_template("index.html")
 
 @app.route("/temperatures")
-def temperatures():
+def temperatures() -> Response | tuple[Response, int]:
     ville = request.args.get("ville", "Toulon")
     try:
         # Géocodage de la ville pour obtenir ses coordonnées
         latitude, longitude = localiser(ville)
         # Chargement des relevés de température
-        releves = charger_releves(ville)
+        releves = charger_releves(ville, coordonnees=(latitude, longitude))
     except ValueError:
         return jsonify({"erreur": f"Ville introuvable : {ville}"}), 404
     except RuntimeError as e:

@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import json
 import sys
 import urllib.parse
 import urllib.request
 
-def moyenne(releves):
+def moyenne(releves: dict[str, float]) -> float:
     """Calcule la température moyenne à partir d'un dictionnaire de relevés.
     Args:
-        releves: Dictionnaire {jour: température} (ex: {'lundi': 20.5}).
+        releves: Dictionnaire {date ISO: température} (ex: {'2024-01-01': 20.5}).
     Returns:
         float: Température moyenne en °C.
     Raises:
@@ -16,7 +18,7 @@ def moyenne(releves):
         raise ValueError("Le dictionnaire de relevés ne peut pas être vide.")
     return sum(releves.values()) / len(releves)
 
-def maximale(releves):
+def jour_le_plus_chaud(releves: dict[str, float]) -> tuple[float, str]:
     """Trouve la température maximale et le jour correspondant.
     Args:
         releves: Dictionnaire {jour: température}.
@@ -35,7 +37,7 @@ def maximale(releves):
             jour_max = jour
     return maxi, jour_max
 
-def jours_au_dessus(releves, seuil):
+def jours_au_dessus(releves: dict[str, float], seuil: float) -> int:
     """Compte les jours où la température dépasse le seuil.
     Args:
         releves: Dictionnaire {jour: température}.
@@ -49,7 +51,7 @@ def jours_au_dessus(releves, seuil):
             resultat += 1
     return resultat
 
-def jour_le_plus_froid(releves):
+def jour_le_plus_froid(releves: dict[str, float]) -> tuple[float, str]:
     """Trouve la température minimale et le jour correspondant.
     Args:
         releves: Dictionnaire {jour: température}.
@@ -68,7 +70,7 @@ def jour_le_plus_froid(releves):
             jour_min = jour
     return temp_mini, jour_min
 
-def localiser(ville):
+def localiser(ville: str) -> tuple[float, float]:
     """Retrouve les coordonnées d'une ville via l'API de géocodage Open-Meteo.
     Args:
         ville: Nom de la ville (str), ex: "Toulon".
@@ -86,25 +88,34 @@ def localiser(ville):
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        raise RuntimeError(f"Échec du géocodage : {e}")
+        raise RuntimeError(f"Échec du géocodage : {e}") from e
     resultats = data.get('results')
     if not resultats:
         raise ValueError(f"Ville introuvable : {ville}")
     return resultats[0]['latitude'], resultats[0]['longitude']
 
-def charger_releves(ville="Toulon"):
+def charger_releves(
+    ville: str = "Toulon",
+    coordonnees: tuple[float, float] | None = None,
+) -> dict[str, float]:
     """Charge les relevés de température pour une ville via Open-Meteo.
     Args:
         ville: Nom de la ville (str). Toulon par défaut.
+        coordonnees: Couple (latitude, longitude) optionnel. Quand il est fourni,
+                     localiser n'est pas appelé (évite un double géocodage).
     Returns:
-        dict: Dictionnaire {date: température} pour les 14 jours
-              (7 jours passés et 7 jours à venir).
+        dict: Dictionnaire {date ISO: température} pour les 14 jours :
+              les 7 premiers jours sont des relevés passés (observations),
+              les 7 derniers des prévisions à venir.
               La température est la moyenne de la temp max et min de chaque jour.
     Raises:
         ValueError: Si la ville est introuvable.
         RuntimeError: Si l'appel API échoue.
     """
-    latitude, longitude = localiser(ville)
+    if coordonnees is None:
+        latitude, longitude = localiser(ville)
+    else:
+        latitude, longitude = coordonnees
     url = (
         "https://api.open-meteo.com/v1/forecast?"
         f"latitude={latitude}&longitude={longitude}&timezone=Europe/Paris"
@@ -115,7 +126,7 @@ def charger_releves(ville="Toulon"):
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        raise RuntimeError(f"Échec de la récupération des données météo : {e}")
+        raise RuntimeError(f"Échec de la récupération des données météo : {e}") from e
 
     dates = data['daily']['time']
     temp_max = data['daily']['temperature_2m_max']
@@ -131,7 +142,7 @@ if __name__ == "__main__":
     try:
         releves = charger_releves()
         m = moyenne(releves)
-        maxi, jour = maximale(releves)
+        maxi, jour = jour_le_plus_chaud(releves)
         nb = jours_au_dessus(releves, m)
         froid, jour_froid = jour_le_plus_froid(releves)
         print(f"La moyenne est de {m:.1f}")

@@ -15,7 +15,7 @@ def test_temperatures_succes():
          patch("app.charger_releves", return_value=releves) as mock_chargement:
         response = client_test.get("/temperatures?ville=Toulon")
     mock_localiser.assert_called_once_with("Toulon")
-    mock_chargement.assert_called_once_with("Toulon")
+    mock_chargement.assert_called_once_with("Toulon", coordonnees=(43.12, 5.93))
     assert response.status_code == 200
     assert response.get_json() == {
         "ville": "Toulon",
@@ -25,11 +25,18 @@ def test_temperatures_succes():
     }
 
 def test_temperatures_ville_defaut():
+    releves = {"2024-01-01": 10.0, "2024-01-02": 12.5}
     with patch("app.localiser", return_value=(43.12, 5.93)), \
-         patch("app.charger_releves", return_value={}) as mock_chargement:
+         patch("app.charger_releves", return_value=releves) as mock_chargement:
         response = client_test.get("/temperatures")
-    mock_chargement.assert_called_once_with("Toulon")
+    mock_chargement.assert_called_once_with("Toulon", coordonnees=(43.12, 5.93))
     assert response.status_code == 200
+    assert response.get_json() == {
+        "ville": "Toulon",
+        "latitude": 43.12,
+        "longitude": 5.93,
+        "releves": releves
+    }
 
 def test_ville_introuvable():
     # Quand la ville est introuvable, localiser lève ValueError
@@ -39,6 +46,15 @@ def test_ville_introuvable():
         response = client_test.get("/temperatures?ville=Yzzkjh")
     assert response.status_code == 404
     assert "Yzzkjh" in response.get_json()["erreur"]
+    mock_chargement.assert_not_called()
+
+def test_ville_vide():
+    # Une chaîne vide n'est pas la valeur par défaut : la ville est introuvable
+    with patch("app.localiser", side_effect=ValueError("Ville introuvable : ")), \
+         patch("app.charger_releves") as mock_chargement:
+        response = client_test.get("/temperatures?ville=")
+    assert response.status_code == 404
+    assert response.get_json()["erreur"] == "Ville introuvable : "
     mock_chargement.assert_not_called()
 
 def test_erreur_reseau():

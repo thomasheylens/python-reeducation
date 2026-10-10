@@ -2,21 +2,21 @@ import json
 import pytest
 from unittest.mock import patch
 import urllib.error
-from meteo import (moyenne, maximale, jours_au_dessus, jour_le_plus_froid,
+from meteo import (moyenne, jour_le_plus_chaud, jours_au_dessus, jour_le_plus_froid,
                    charger_releves, localiser)
 
 def test_moyenne():
     releves = {"2024-01-01": 10.0, "2024-01-02": 20.0, "2024-01-03": 30.0}
     assert moyenne(releves) == 20.0
 
-def test_maximum():
+def test_jour_le_plus_chaud():
     releves_simple = {"2024-01-01": 10.0, "2024-01-02": 20.0, "2024-01-03": 15.0}
-    max_temp, max_jour = maximale(releves_simple)
+    max_temp, max_jour = jour_le_plus_chaud(releves_simple)
     assert max_temp == 20.0
     assert max_jour == "2024-01-02"
 
     releves_egalite = {"2024-01-01": 20.0, "2024-01-02": 20.0, "2024-01-03": 15.0}
-    max_temp, max_jour = maximale(releves_egalite)
+    max_temp, max_jour = jour_le_plus_chaud(releves_egalite)
     assert max_temp == 20.0
     assert max_jour == "2024-01-01"
 
@@ -78,7 +78,7 @@ def test_dictionnaire_vide():
     with pytest.raises(ValueError):
         moyenne({})
     with pytest.raises(ValueError):
-        maximale({})
+        jour_le_plus_chaud({})
     assert jours_au_dessus({}, 10.0) == 0
     with pytest.raises(ValueError):
         jour_le_plus_froid({})
@@ -87,8 +87,8 @@ def test_moyenne_cas_varies():
     assert moyenne({"2024-01-01": 15.0}) == 15.0
     assert moyenne({"2024-01-01": -5.0, "2024-01-02": 5.0}) == 0.0
 
-def test_maximale_une_entree():
-    max_temp, max_jour = maximale({"2024-01-01": 15.0})
+def test_jour_le_plus_chaud_une_entree():
+    max_temp, max_jour = jour_le_plus_chaud({"2024-01-01": 15.0})
     assert max_temp == 15.0
     assert max_jour == "2024-01-01"
 
