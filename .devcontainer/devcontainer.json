@@ -1,3 +1,4 @@
 {
-  "postStartCommand": "git pull --ff-only"
+  "postStartCommand": "git pull --ff-only",
+  "postCreateCommand": "curl -LsSf https://mistral.ai/vibe/install.sh | bash"
 }
