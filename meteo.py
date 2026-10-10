@@ -107,3 +107,4 @@ print(f"La moyenne est de {m:.1f}")
 print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
 print(f"Nombre de jours au-dessus de la moyenne : {nb}")
 print(f"Le jour le plus froid est {jour_froid} avec {froid}°C")
+
