@@ -9,3 +9,10 @@ def maximale(valeurs, jours):
             maxi = valeurs[i]
             jour_max = jours[i]
     return maxi, jour_max
+
+def jours_au_dessus(valeurs, seuil):
+    resultat = 0
+    for i in range(len(valeurs)):
+        if valeurs[i] > seuil:
+            resultat += 1
+    return resultat
