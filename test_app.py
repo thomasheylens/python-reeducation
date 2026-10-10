@@ -9,6 +9,14 @@ def test_page_accueil():
     assert response.status_code == 200
     assert b"Toulon" in response.data
 
+def test_page_accueil_mode_nuit():
+    # Le bouton de bascule et le fond de carte nocturne sont présents dans la page
+    response = client_test.get("/")
+    assert response.status_code == 200
+    assert b'id="mode-nuit"' in response.data
+    assert b"Mode nuit" in response.data
+    assert b"dark_all" in response.data
+
 def test_temperatures_succes():
     releves = {"2024-01-01": 10.0, "2024-01-02": 12.5}
     with patch("app.localiser", return_value=(43.12, 5.93)) as mock_localiser, \

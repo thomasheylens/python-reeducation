@@ -27,6 +27,13 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
   #erreur:empty { display: none; }
+  /* Mode nuit : thème sombre appliqué quand <body> porte la classe "nuit" */
+  body.nuit { background: #121212; }
+  body.nuit #recherche { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); }
+  body.nuit #erreur { background: #1e1e1e; color: #ff8080; }
+  body.nuit #ville, body.nuit #date, body.nuit button {
+    background: #2a2a2a; color: #eeeeee; border: 1px solid #444444;
+  }
 </style>
 </head>
 <body>
@@ -37,6 +44,8 @@
   <input id="ville" placeholder="Nom d'une ville" value="Toulon">
   <select id="date"></select>
   <button type="submit">Afficher</button>
+  <!-- Bouton de bascule du mode nuit : type="button" pour ne pas soumettre le formulaire -->
+  <button id="mode-nuit" type="button">Mode nuit</button>
 </form>
 <p id="erreur"></p>
 <!-- Script Leaflet 1.9.4 -->
@@ -44,9 +53,34 @@
 <script>
 // La carte est créée une seule fois, dès le chargement de la page
 const carte = L.map("carte").setView([46.6, 2.4], 5); // Vue d'ensemble sur la France
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+// Deux fonds de carte prêts à l'emploi : jour (OpenStreetMap) et nuit (CARTO sombre)
+// Les tuiles sont de simples URL : aucune bibliothèque externe n'est ajoutée
+const coucheJour = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(carte);
+});
+const coucheNuit = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+});
+// Par défaut, c'est le fond de jour qui est affiché
+coucheJour.addTo(carte);
+
+// Bascule du mode nuit : on échange les tuiles et on assombrit toute la page
+const boutonModeNuit = document.getElementById("mode-nuit");
+let modeNuit = false;
+boutonModeNuit.addEventListener("click", () => {
+  modeNuit = !modeNuit;
+  if (modeNuit) {
+    carte.removeLayer(coucheJour);
+    coucheNuit.addTo(carte);
+    document.body.classList.add("nuit");
+    boutonModeNuit.textContent = "Mode jour";
+  } else {
+    carte.removeLayer(coucheNuit);
+    coucheJour.addTo(carte);
+    document.body.classList.remove("nuit");
+    boutonModeNuit.textContent = "Mode nuit";
+  }
+});
 
 let marqueur = null; // Référence au marqueur actuel
 
