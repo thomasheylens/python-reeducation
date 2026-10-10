@@ -6,6 +6,7 @@ Calcule des statistiques sur des relevés de température pour une ville donnée
 Identifie les températures les plus élevées et les plus basses avec leurs dates.
 Compte le nombre de jours où la température dépasse un seuil donné.
 Sert une page web (Flask) qui affiche les températures des 14 jours (7 passés, 7 à venir), avec recherche par ville.
+Affiche une carte interactive (Leaflet/OpenStreetMap) centrée sur la ville recherchée, avec un marqueur indiquant la température du premier jour.
 
 ## Installation
 git clone https://github.com/thomasheylens/python-reeducation.git
