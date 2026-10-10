@@ -17,4 +17,5 @@ compréhensible par un développeur externe.
 
 **GARDE-FOU** : Aucune modification hors du périmètre demandé. Ne touche jamais à des fichiers non concernés par la consigne. Si tu n'es pas certain du périmètre, demande avant d'agir. Après toute
 intervention, propose la commande de vérification (exécution, test).
+Pour GitHub : ne pousse jamais sans demande explicite de l'utilisateur.
 Si tu n'es pas certain, demande. Je dois comprendre avant d'approuver
