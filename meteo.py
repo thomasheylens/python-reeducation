@@ -8,7 +8,7 @@ import urllib.request
 def moyenne(releves: dict[str, float]) -> float:
     """Calcule la température moyenne à partir d'un dictionnaire de relevés.
     Args:
-        releves: Dictionnaire {jour: température} (ex: {'lundi': 20.5}).
+        releves: Dictionnaire {date ISO: température} (ex: {'2024-01-01': 20.5}).
     Returns:
         float: Température moyenne en °C.
     Raises:
@@ -104,8 +104,9 @@ def charger_releves(
         coordonnees: Couple (latitude, longitude) optionnel. Quand il est fourni,
                      localiser n'est pas appelé (évite un double géocodage).
     Returns:
-        dict: Dictionnaire {date: température} pour les 14 jours
-              (7 jours passés et 7 jours à venir).
+        dict: Dictionnaire {date ISO: température} pour les 14 jours :
+              les 7 premiers jours sont des relevés passés (observations),
+              les 7 derniers des prévisions à venir.
               La température est la moyenne de la temp max et min de chaque jour.
     Raises:
         ValueError: Si la ville est introuvable.
