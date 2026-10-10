@@ -16,7 +16,7 @@ def moyenne(releves):
         raise ValueError("Le dictionnaire de relevés ne peut pas être vide.")
     return sum(releves.values()) / len(releves)
 
-def maximale(releves):
+def jour_le_plus_chaud(releves):
     """Trouve la température maximale et le jour correspondant.
     Args:
         releves: Dictionnaire {jour: température}.
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     try:
         releves = charger_releves()
         m = moyenne(releves)
-        maxi, jour = maximale(releves)
+        maxi, jour = jour_le_plus_chaud(releves)
         nb = jours_au_dessus(releves, m)
         froid, jour_froid = jour_le_plus_froid(releves)
         print(f"La moyenne est de {m:.1f}")
