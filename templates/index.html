@@ -3,75 +3,116 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Météo — températures des 14 jours</title>
+<title>Météo — carte des températures sur 14 jours</title>
 <!-- Feuille de style Leaflet 1.9.4 -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-  body { font-family: -apple-system, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
-  form { display: flex; gap: 0.5rem; }
-  input { flex: 1; padding: 0.5rem; font-size: 1rem; }
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  /* La carte occupe toute la fenêtre : c'est l'élément principal de la page */
+  #carte { height: 100vh; width: 100%; }
+  /* La recherche flotte par-dessus la carte, centrée en haut */
+  #recherche {
+    position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+    z-index: 1001; display: flex; gap: 0.5rem;
+    background: #fff; padding: 0.75rem 1rem; border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  #ville, #date { padding: 0.5rem; font-size: 1rem; }
   button { padding: 0.5rem 1rem; font-size: 1rem; }
-  #carte { height: 300px; margin: 1rem 0; border-radius: 8px; }
-  ul { list-style: none; padding: 0; }
-  li { padding: 0.4rem 0; border-bottom: 1px solid #eee; }
-  .erreur { color: #b00; }
+  /* Le message d'erreur flotte sous le formulaire ; invisible quand il est vide */
+  #erreur {
+    position: fixed; top: 4.5rem; left: 50%; transform: translateX(-50%);
+    z-index: 1001; margin: 0; padding: 0.4rem 0.8rem;
+    background: #fff; border-radius: 8px; color: #b00; font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  #erreur:empty { display: none; }
 </style>
 </head>
 <body>
-<h1>Températures des 14 jours <small>(7 passés, 7 à venir)</small></h1>
+<!-- Carte plein écran : élément principal de la page -->
+<div id="carte"></div>
+<!-- Recherche centrée en haut, par-dessus la carte -->
 <form id="recherche">
   <input id="ville" placeholder="Nom d'une ville" value="Toulon">
+  <select id="date"></select>
   <button type="submit">Afficher</button>
 </form>
-<p class="erreur" id="erreur"></p>
-<div id="carte"></div>
-<ul id="resultats"></ul>
+<p id="erreur"></p>
 <!-- Script Leaflet 1.9.4 -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let carte = null;    // Référence à la carte Leaflet, créée une seule fois
+// La carte est créée une seule fois, dès le chargement de la page
+const carte = L.map("carte").setView([46.6, 2.4], 5); // Vue d'ensemble sur la France
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(carte);
+
 let marqueur = null; // Référence au marqueur actuel
+
+// Formate une date au format AAAA-MM-JJ (clés des relevés retournés par l'API)
+function versISO(date) {
+  const mois = String(date.getMonth() + 1).padStart(2, "0");
+  const jour = String(date.getDate()).padStart(2, "0");
+  return date.getFullYear() + "-" + mois + "-" + jour;
+}
+
+// Remplit la liste déroulante avec les 14 jours possibles : 7 passés, 7 à venir
+function remplirDates() {
+  const select = document.getElementById("date");
+  // Option par défaut : aucune date choisie, pour inviter à la sélectionner
+  const invitation = document.createElement("option");
+  invitation.value = "";
+  invitation.textContent = "Choisir une date…";
+  select.appendChild(invitation);
+  const aujourdhui = new Date();
+  for (let decalage = -7; decalage <= 6; decalage++) {
+    const date = new Date(aujourdhui);
+    date.setDate(aujourdhui.getDate() + decalage);
+    const option = document.createElement("option");
+    option.value = versISO(date);
+    option.textContent = date.toLocaleDateString("fr-FR", {
+      weekday: "short", day: "numeric", month: "short"
+    });
+    select.appendChild(option);
+  }
+}
+remplirDates();
 
 document.getElementById("recherche").addEventListener("submit", async (evenement) => {
   evenement.preventDefault();
   const ville = document.getElementById("ville").value.trim();
-  const liste = document.getElementById("resultats");
+  const date = document.getElementById("date").value;
   const erreur = document.getElementById("erreur");
-  liste.innerHTML = "";
   erreur.textContent = "";
+  // La date est obligatoire : on invite l'utilisateur à la choisir
+  if (!date) {
+    erreur.textContent = "Veuillez choisir une date parmi les 14 jours proposés.";
+    return;
+  }
   const reponse = await fetch("/temperatures?ville=" + encodeURIComponent(ville));
   const data = await reponse.json();
   if (!reponse.ok) {
     erreur.textContent = data.erreur;
     return;
   }
-  // Création de la carte une seule fois, sinon on la recentre
-  if (carte === null) {
-    carte = L.map("carte").setView([data.latitude, data.longitude], 10);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(carte);
-  } else {
-    carte.setView([data.latitude, data.longitude], 10);
-    // Supprimer l'ancien marqueur s'il existe
-    if (marqueur !== null) {
-      carte.removeLayer(marqueur);
-    }
+  // Température du jour choisi, parmi les relevés des 14 jours
+  const temperature = data.releves[date];
+  if (temperature === undefined) {
+    erreur.textContent = "Pas de relevé pour le " + date + ".";
+    return;
   }
-  // Premier jour des relevés pour l'info-bulle du marqueur
-  const premierJour = Object.keys(data.releves)[0];
-  const premiereTemp = data.releves[premierJour];
-  // Placer le marqueur avec l'info-bulle "ville — date : température °C"
+  // Centrer la carte sur la ville recherchée
+  carte.setView([data.latitude, data.longitude], 10);
+  // Remplacer l'ancien marqueur par un nouveau
+  if (marqueur !== null) {
+    carte.removeLayer(marqueur);
+  }
+  // Info-bulle : nom de la ville et température du jour choisi
   marqueur = L.marker([data.latitude, data.longitude])
     .addTo(carte)
-    .bindPopup(data.ville + " — " + premierJour + " : " + premiereTemp + " °C")
+    .bindPopup(data.ville + " — " + date + " : " + temperature + " °C")
     .openPopup();
-  // Afficher la liste des températures
-  for (const [jour, temp] of Object.entries(data.releves)) {
-    const element = document.createElement("li");
-    element.textContent = jour + " : " + temp + " °C";
-    liste.appendChild(element);
-  }
 });
 </script>
 </body>
