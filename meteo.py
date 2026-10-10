@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 import sys
 import urllib.parse
 import urllib.request
 
-def moyenne(releves):
+def moyenne(releves: dict[str, float]) -> float:
     """Calcule la température moyenne à partir d'un dictionnaire de relevés.
     Args:
         releves: Dictionnaire {jour: température} (ex: {'lundi': 20.5}).
@@ -16,7 +18,7 @@ def moyenne(releves):
         raise ValueError("Le dictionnaire de relevés ne peut pas être vide.")
     return sum(releves.values()) / len(releves)
 
-def jour_le_plus_chaud(releves):
+def jour_le_plus_chaud(releves: dict[str, float]) -> tuple[float, str]:
     """Trouve la température maximale et le jour correspondant.
     Args:
         releves: Dictionnaire {jour: température}.
@@ -35,7 +37,7 @@ def jour_le_plus_chaud(releves):
             jour_max = jour
     return maxi, jour_max
 
-def jours_au_dessus(releves, seuil):
+def jours_au_dessus(releves: dict[str, float], seuil: float) -> int:
     """Compte les jours où la température dépasse le seuil.
     Args:
         releves: Dictionnaire {jour: température}.
@@ -49,7 +51,7 @@ def jours_au_dessus(releves, seuil):
             resultat += 1
     return resultat
 
-def jour_le_plus_froid(releves):
+def jour_le_plus_froid(releves: dict[str, float]) -> tuple[float, str]:
     """Trouve la température minimale et le jour correspondant.
     Args:
         releves: Dictionnaire {jour: température}.
@@ -68,7 +70,7 @@ def jour_le_plus_froid(releves):
             jour_min = jour
     return temp_mini, jour_min
 
-def localiser(ville):
+def localiser(ville: str) -> tuple[float, float]:
     """Retrouve les coordonnées d'une ville via l'API de géocodage Open-Meteo.
     Args:
         ville: Nom de la ville (str), ex: "Toulon".
@@ -92,7 +94,7 @@ def localiser(ville):
         raise ValueError(f"Ville introuvable : {ville}")
     return resultats[0]['latitude'], resultats[0]['longitude']
 
-def charger_releves(ville="Toulon"):
+def charger_releves(ville: str = "Toulon") -> dict[str, float]:
     """Charge les relevés de température pour une ville via Open-Meteo.
     Args:
         ville: Nom de la ville (str). Toulon par défaut.
