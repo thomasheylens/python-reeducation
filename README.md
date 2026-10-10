@@ -14,6 +14,9 @@ pip install pytest
 ## Utilisation
 Exécuter `python meteo.py`.
 
+## Limites
+Limites : les températures sont des moyennes (max+min)/2, pas des moyennes horaires
+
 ## Tests
 Les tests vérifient les calculs de moyenne, les extrêmes, le comptage des jours au-dessus d'un seuil, ainsi que la gestion des erreurs (données manquantes, problèmes de connexion).
 
