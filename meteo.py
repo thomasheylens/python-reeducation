@@ -17,6 +17,15 @@ def jours_au_dessus(releves, seuil):
             resultat += 1
     return resultat
 
+def jour_le_plus_froid(releves):
+    mini = float('inf')
+    jour_min = None
+    for jour, temp in releves.items():
+        if temp < mini:
+            mini = temp
+            jour_min = jour
+    return mini, jour_min
+
 releves = {
     "lundi": 12,
     "mardi": 15,
@@ -32,3 +41,5 @@ maxi, jour = maximale(releves)
 print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
 nb = jours_au_dessus(releves, m)
 print(f"Nombre de jours au-dessus de la moyenne : {nb}")
+froid, jour_froid = jour_le_plus_froid(releves)
+print(f"Le jour le plus froid est {jour_froid} avec {froid}°C")
