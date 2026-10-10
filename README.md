@@ -7,7 +7,9 @@ Identifie les températures les plus élevées et les plus basses avec leurs dat
 Compte le nombre de jours où la température dépasse un seuil donné.
 
 ## Installation
-Cloner le dépôt. Dépendances : `requests`, `pytest`.
+git clone https://github.com/<votre-compte>/python-reeducation.git
+cd python-reeducation
+pip install requests pytest
 
 ## Utilisation
 Exécuter `python meteo.py`.
