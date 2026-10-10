@@ -94,10 +94,15 @@ def localiser(ville: str) -> tuple[float, float]:
         raise ValueError(f"Ville introuvable : {ville}")
     return resultats[0]['latitude'], resultats[0]['longitude']
 
-def charger_releves(ville: str = "Toulon") -> dict[str, float]:
+def charger_releves(
+    ville: str = "Toulon",
+    coordonnees: tuple[float, float] | None = None,
+) -> dict[str, float]:
     """Charge les relevés de température pour une ville via Open-Meteo.
     Args:
         ville: Nom de la ville (str). Toulon par défaut.
+        coordonnees: Couple (latitude, longitude) optionnel. Quand il est fourni,
+                     localiser n'est pas appelé (évite un double géocodage).
     Returns:
         dict: Dictionnaire {date: température} pour les 14 jours
               (7 jours passés et 7 jours à venir).
@@ -106,7 +111,10 @@ def charger_releves(ville: str = "Toulon") -> dict[str, float]:
         ValueError: Si la ville est introuvable.
         RuntimeError: Si l'appel API échoue.
     """
-    latitude, longitude = localiser(ville)
+    if coordonnees is None:
+        latitude, longitude = localiser(ville)
+    else:
+        latitude, longitude = coordonnees
     url = (
         "https://api.open-meteo.com/v1/forecast?"
         f"latitude={latitude}&longitude={longitude}&timezone=Europe/Paris"

@@ -15,7 +15,7 @@ def test_temperatures_succes():
          patch("app.charger_releves", return_value=releves) as mock_chargement:
         response = client_test.get("/temperatures?ville=Toulon")
     mock_localiser.assert_called_once_with("Toulon")
-    mock_chargement.assert_called_once_with("Toulon")
+    mock_chargement.assert_called_once_with("Toulon", coordonnees=(43.12, 5.93))
     assert response.status_code == 200
     assert response.get_json() == {
         "ville": "Toulon",
@@ -28,7 +28,7 @@ def test_temperatures_ville_defaut():
     with patch("app.localiser", return_value=(43.12, 5.93)), \
          patch("app.charger_releves", return_value={}) as mock_chargement:
         response = client_test.get("/temperatures")
-    mock_chargement.assert_called_once_with("Toulon")
+    mock_chargement.assert_called_once_with("Toulon", coordonnees=(43.12, 5.93))
     assert response.status_code == 200
 
 def test_ville_introuvable():

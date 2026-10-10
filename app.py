@@ -17,7 +17,7 @@ def temperatures() -> Response | tuple[Response, int]:
         # Géocodage de la ville pour obtenir ses coordonnées
         latitude, longitude = localiser(ville)
         # Chargement des relevés de température
-        releves = charger_releves(ville)
+        releves = charger_releves(ville, coordonnees=(latitude, longitude))
     except ValueError:
         return jsonify({"erreur": f"Ville introuvable : {ville}"}), 404
     except RuntimeError as e:
