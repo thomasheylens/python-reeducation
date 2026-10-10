@@ -28,6 +28,8 @@ Journal de bord du projet `python-reeducation` : réapprentissage de Python, acc
 
 **Branches Git** — Première pratique réelle du travail en canal : création d'une branche, commit isolé hors de la ligne principale, retour vérifié par l'historique, puis fusion. Compréhension acquise : une branche est un simple pointeur nommé, la fusion déplace l'étiquette de main (un même commit, deux désignations), et supprimer la branche ne détruit rien — le travail reste atteignable depuis main. Réflexe ancré : vérifier sa position (git branch) avant de committer. Organisations d'équipe découvertes : GitFlow (cérémonieux, versions longues) et trunk-based (canaux courts, livraisons fréquentes — l'école dominante, adossée à des tests automatisés).
 
+**Automatisation d'environnement** — Pull automatique à l'ouverture du Codespace (avance rapide uniquement, refus propre en cas de divergence), installation du CLI Vibe déclarée dans la configuration du conteneur. Preuve de fonctionnement lue dans le journal du conteneur (Already up to date, exit code 0). Leçon structurelle : un conteneur est jetable, tout ce qui n'est pas déclaré dans la configuration est perdu à la reconstruction — l'environnement de travail est désormais intégralement déclaré dans le dépôt.
+
 ## Lecture d'ensemble
 
 La trajectoire se lit en quatre mouvements : outillage, méthode de collaboration, technique (dictionnaires, API, tests), puis communication (documentation). Le fil conducteur est constant : déléguer l'exécution, conserver la décision — l'arbitrage technique et la vérification finale restent les miens à chaque étape. C'est la position du chef de projet technique que je vise.
