@@ -1,5 +1,5 @@
 import pytest
-from meteo import moyenne, maximale, jour_le_plus_froid, charger_releves
+from meteo import moyenne, maximale, jours_au_dessus, jour_le_plus_froid, charger_releves
 
 def test_moyenne():
     releves = {"2024-01-01": 10.0, "2024-01-02": 20.0, "2024-01-03": 30.0}
@@ -29,3 +29,12 @@ def test_charger_releves():
     releves = charger_releves()
     assert isinstance(releves, dict)
     assert len(releves) > 0
+
+def test_dictionnaire_vide():
+    with pytest.raises(ValueError):
+        moyenne({})
+    with pytest.raises(ValueError):
+        maximale({})
+    assert jours_au_dessus({}, 10.0) == 0
+    with pytest.raises(ValueError):
+        jour_le_plus_froid({})
