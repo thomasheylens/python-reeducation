@@ -36,7 +36,7 @@ def maximale(releves):
     return maxi, jour_max
 
 def jours_au_dessus(releves, seuil):
-    """Compte les jours ù la température dépasse le seuil.
+    """Compte les jours où la température dépasse le seuil.
     Args:
         releves: Dictionnaire {jour: température}.
         seuil: Température seuil en °C (float).
@@ -70,7 +70,7 @@ def jour_le_plus_froid(releves):
 
 def localiser(ville):
     """Retrouve les coordonnées d'une ville via l'API de géocodage Open-Meteo.
-    Args
+    Args:
         ville: Nom de la ville (str), ex: "Toulon".
     Returns:
         tuple: (latitude, longitude) du premier résultat.
@@ -80,13 +80,13 @@ def localiser(ville):
     """
     url = (
         "https://geocoding-api.open-meteo.com/v1/search?name="
-        + urllib.parse.quote(ville) + "&countt=1&language=fr&format=json"
+        + urllib.parse.quote(ville) + "&count=1&language=fr&format=json"
     )
     try:
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        raise RuntimeError(fÌîchec du géocodage : {e}")
+        raise RuntimeError(f"Échec du géocodage : {e}")
     resultats = data.get('results')
     if not resultats:
         raise ValueError(f"Ville introuvable : {ville}")
@@ -94,7 +94,7 @@ def localiser(ville):
 
 def charger_releves(ville="Toulon"):
     """Charge les relevés de température pour une ville via Open-Meteo.
-    Args
+    Args:
         ville: Nom de la ville (str). Toulon par défaut.
     Returns:
         dict: Dictionnaire {date: température} pour les 7 derniers jours.
@@ -114,7 +114,7 @@ def charger_releves(ville="Toulon"):
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        raise RuntimeError(fÌëchec de la récupération des données météo : {}")
+        raise RuntimeError(f"Échec de la récupération des données météo : {e}")
 
     dates = data['daily']['time']
     temp_max = data['daily']['temperature_2m_max']
@@ -134,9 +134,9 @@ if __name__ == "__main__":
         nb = jours_au_dessus(releves, m)
         froid, jour_froid = jour_le_plus_froid(releves)
         print(f"La moyenne est de {m:.1f}")
-        print(f"Le jour le plus chaud est {jour} avec {maxi]°C}")
+        print(f"Le jour le plus chaud est {jour} avec {maxi}°C")
         print(f"Nombre de jours au-dessus de la moyenne : {nb}")
-        print(f"Le jour le plus froid est {jour_froid} avec {froid_¬C}")
+        print(f"Le jour le plus froid est {jour_froid} avec {froid}°C")
     except (ValueError, RuntimeError) as e:
         print(e, file=sys.stderr)
         sys.exit(1)

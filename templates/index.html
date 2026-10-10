@@ -31,14 +31,14 @@ document.getElementById("recherche").addEventListener("submit", async (evenement
   liste.innerHTML = "";
   erreur.textContent = "";
   const reponse = await fetch("/temperatures?ville=" + encodeURIComponent(ville));
-  const data = await response.json();
-  if (!response.ok) {
+  const data = await reponse.json();
+  if (!reponse.ok) {
     erreur.textContent = data.erreur;
     return;
   }
   for (const [jour, temp] of Object.entries(data.releves)) {
     const element = document.createElement("li");
-    element.textContent = jour + " : " + temp + " ¬C";
+    element.textContent = jour + " : " + temp + " °C";
     liste.appendChild(element);
   }
 });
