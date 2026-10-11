@@ -124,7 +124,8 @@ def charger_releves(
     )
 
     try:
-        with urllib.request.urlopen(url) as response:
+        # Le timeout évite qu'une connexion pendue ne bloque le chargement indéfiniment
+        with urllib.request.urlopen(url, timeout=15) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:
         raise RuntimeError(f"Échec de la récupération des données météo : {e}") from e
@@ -142,7 +143,7 @@ def charger_releves(
 def charger_releves_villes(villes: list[dict]) -> list[dict]:
     """Charge les relevés des 14 jours pour plusieurs villes, en parallèle.
     Un appel à l'API Open-Meteo est fait par ville ; les appels sont répartis
-    entre 10 fils pour ne pas attendre chaque ville l'une après l'autre.
+    entre 3 fils pour ne pas attendre chaque ville l'une après l'autre.
     Args:
         villes: Liste de dictionnaires {"nom", "latitude", "longitude"}.
     Returns:
@@ -163,7 +164,8 @@ def charger_releves_villes(villes: list[dict]) -> list[dict]:
             "longitude": ville["longitude"],
             "releves": releves,
         }
-    with ThreadPoolExecutor(max_workers=10) as pool:
+    # 3 fils suffisent : au-delà, l'API Open-Meteo ralentit fortement les requêtes
+    with ThreadPoolExecutor(max_workers=3) as pool:
         resultats = list(pool.map(releves_d_une_ville, villes))
     return [resultat for resultat in resultats if resultat is not None]
 
