@@ -129,13 +129,31 @@ const groupeVilles = L.layerGroup().addTo(carte);
 // Échelle de couleur : -10 °C = bleu pur, 40 °C = rouge pur (interpolation linéaire)
 const TEMP_MIN = -10;
 const TEMP_MAX = 40;
-// Renvoie la couleur du texte pour une température, entre bleu (froid) et rouge (chaud)
+// Convertit une couleur HSL (teinte en degrés, saturation et luminosité entre
+// 0 et 1) en chaîne "rgb(r, g, b)" utilisable directement en CSS
+function hslVersRgb(teinte, saturation, luminosite) {
+  const c = (1 - Math.abs(2 * luminosite - 1)) * saturation;
+  const secteur = (teinte % 360) / 60;
+  const x = c * (1 - Math.abs((secteur % 2) - 1));
+  let r = 0, g = 0, b = 0;
+  if (secteur < 1) { r = c; g = x; }
+  else if (secteur < 2) { r = x; g = c; }
+  else if (secteur < 3) { g = c; b = x; }
+  else if (secteur < 4) { g = x; b = c; }
+  else if (secteur < 5) { r = x; b = c; }
+  else { r = c; b = x; }
+  const m = luminosite - c / 2;
+  return "rgb(" + Math.round((r + m) * 255) + ", " + Math.round((g + m) * 255)
+         + ", " + Math.round((b + m) * 255) + ")";
+}
+// Renvoie la couleur du texte pour une température : teintes vives et saturées,
+// du bleu (froid) au rouge (chaud) en passant par un magenta très visible
 function couleurTemperature(temp) {
   let part = (temp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN);
   part = Math.max(0, Math.min(1, part)); // On reste dans l'échelle, même hors bornes
-  const rouge = Math.round(255 * part);
-  const bleu = Math.round(255 * (1 - part));
-  return "rgb(" + rouge + ", 0, " + bleu + ")";
+  // Teinte de 240° (bleu) à 0° (rouge) en passant par 300° (magenta)
+  const teinte = (240 + 120 * part) % 360;
+  return hslVersRgb(teinte, 1, 0.5);
 }
 
 // Formate une date au format AAAA-MM-JJ (clés des relevés retournés par l'API)
