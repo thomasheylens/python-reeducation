@@ -27,6 +27,43 @@ def test_page_curseur_date_et_texte_carte():
     assert b"temperature-carte" in response.data
     assert b"bindPopup" not in response.data
 
+def test_page_colonne_mesures():
+    # La colonne des mesures est présente dans la page, masquée par défaut
+    response = client_test.get("/")
+    assert response.status_code == 200
+    assert b'id="mesures"' in response.data
+    assert b'id="mesure-moyenne"' in response.data
+    assert b'id="mesure-max"' in response.data
+    assert b'id="mesure-min"' in response.data
+    assert b'id="mesure-jours"' in response.data
+    assert b"#mesures.visible" in response.data
+
+def test_temperatures_villes():
+    # La route renvoie les relevés de chaque ville du fichier villes.json
+    villes = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93}]
+    donnees = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93,
+                "releves": {"2024-01-01": 10.0}}]
+    with patch("app.VILLES", villes), \
+         patch("app.charger_releves_villes", return_value=donnees) as mock:
+        serveur._cache_villes = None  # Vide le cache entre les tests
+        response = client_test.get("/temperatures-villes")
+    assert response.status_code == 200
+    assert response.get_json() == donnees
+    mock.assert_called_once_with(villes)
+
+def test_temperatures_villes_cache():
+    # Un deuxième appel dans les 30 minutes ne recharge pas les données
+    villes = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93}]
+    donnees = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93,
+                "releves": {"2024-01-01": 10.0}}]
+    with patch("app.VILLES", villes), \
+         patch("app.charger_releves_villes", return_value=donnees) as mock:
+        serveur._cache_villes = None
+        client_test.get("/temperatures-villes")
+        response = client_test.get("/temperatures-villes")
+    mock.assert_called_once()
+    assert response.get_json() == donnees
+
 def test_temperatures_succes():
     releves = {"2024-01-01": 10.0, "2024-01-02": 12.5}
     with patch("app.localiser", return_value=(43.12, 5.93)) as mock_localiser, \
@@ -39,7 +76,13 @@ def test_temperatures_succes():
         "ville": "Toulon",
         "latitude": 43.12,
         "longitude": 5.93,
-        "releves": releves
+        "releves": releves,
+        "mesures": {
+            "moyenne": 11.25,
+            "max": {"temperature": 12.5, "jour": "2024-01-02"},
+            "min": {"temperature": 10.0, "jour": "2024-01-01"},
+            "jours_au_dessus_moyenne": 1
+        }
     }
 
 def test_temperatures_ville_defaut():
@@ -53,7 +96,13 @@ def test_temperatures_ville_defaut():
         "ville": "Toulon",
         "latitude": 43.12,
         "longitude": 5.93,
-        "releves": releves
+        "releves": releves,
+        "mesures": {
+            "moyenne": 11.25,
+            "max": {"temperature": 12.5, "jour": "2024-01-02"},
+            "min": {"temperature": 10.0, "jour": "2024-01-01"},
+            "jours_au_dessus_moyenne": 1
+        }
     }
 
 def test_ville_introuvable():

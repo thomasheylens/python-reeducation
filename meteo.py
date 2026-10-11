@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import json
 import sys
 import urllib.parse
@@ -123,7 +124,8 @@ def charger_releves(
     )
 
     try:
-        with urllib.request.urlopen(url) as response:
+        # Le timeout évite qu'une connexion pendue ne bloque le chargement indéfiniment
+        with urllib.request.urlopen(url, timeout=15) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:
         raise RuntimeError(f"Échec de la récupération des données météo : {e}") from e
@@ -137,6 +139,35 @@ def charger_releves(
         moyenne_temp = (temp_max[i] + temp_min[i]) / 2
         releves[dates[i]] = round(moyenne_temp, 1)
     return releves
+
+def charger_releves_villes(villes: list[dict]) -> list[dict]:
+    """Charge les relevés des 14 jours pour plusieurs villes, en parallèle.
+    Un appel à l'API Open-Meteo est fait par ville ; les appels sont répartis
+    entre 3 fils pour ne pas attendre chaque ville l'une après l'autre.
+    Args:
+        villes: Liste de dictionnaires {"nom", "latitude", "longitude"}.
+    Returns:
+        list: Dictionnaires {"nom", "latitude", "longitude", "releves"}.
+              Les villes dont le chargement échoue sont ignorées.
+    """
+    def releves_d_une_ville(ville: dict) -> dict | None:
+        try:
+            releves = charger_releves(
+                ville["nom"],
+                coordonnees=(ville["latitude"], ville["longitude"]),
+            )
+        except (ValueError, RuntimeError):
+            return None  # Une ville en échec ne doit pas faire échouer les autres
+        return {
+            "nom": ville["nom"],
+            "latitude": ville["latitude"],
+            "longitude": ville["longitude"],
+            "releves": releves,
+        }
+    # 3 fils suffisent : au-delà, l'API Open-Meteo ralentit fortement les requêtes
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        resultats = list(pool.map(releves_d_une_ville, villes))
+    return [resultat for resultat in resultats if resultat is not None]
 
 if __name__ == "__main__":
     try:

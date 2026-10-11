@@ -27,16 +27,27 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
   #erreur:empty { display: none; }
-  /* Texte de température posé directement sur la carte (pas d'info-bulle) */
-  .temperature-carte {
-    font-size: 1.3rem; font-weight: bold; line-height: 28px;
-    text-align: center; white-space: nowrap;
+  /* Textes de température posés directement sur la carte (pas d'info-bulle) */
+  .temperature-carte, .temperature-recherchee {
+    font-weight: bold; text-align: center; white-space: nowrap;
     /* Halo blanc pour rester lisible sur les tuiles claires */
     text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
   }
+  /* Villes affichées en permanence en fond de carte : texte discret */
+  .temperature-carte { font-size: 1.05rem; line-height: 20px; }
+  /* Ville recherchée : texte plus grand et halo renforcé pour la distinguer */
+  .temperature-recherchee {
+    font-size: 1.5rem; font-weight: 900; line-height: 30px;
+    text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff,
+                 0 0 6px #fff;
+  }
   /* En mode nuit, le halo devient noir pour contraster avec le fond sombre */
-  body.nuit .temperature-carte {
+  body.nuit .temperature-carte, body.nuit .temperature-recherchee {
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  }
+  body.nuit .temperature-recherchee {
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+                 0 0 6px #000;
   }
   /* Mode nuit : thème sombre appliqué quand <body> porte la classe "nuit" */
   body.nuit { background: #121212; }
@@ -56,6 +67,23 @@
   #curseur-label { font-size: 0.95rem; min-width: 11rem; text-align: center; }
   body.nuit #curseur-conteneur { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); }
   body.nuit #curseur-label { color: #eeeeee; }
+  /* Colonne des mesures à droite, visible seulement après une recherche */
+  #mesures {
+    position: fixed; top: 1rem; right: 1rem; z-index: 1001; width: 270px;
+    background: #fff; padding: 0.75rem 1rem; border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); display: none;
+  }
+  #mesures.visible { display: block; }
+  #mesures h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+  #mesures ul { margin: 0; padding: 0; list-style: none; }
+  #mesures li {
+    display: flex; justify-content: space-between; gap: 0.5rem;
+    padding: 0.25rem 0; font-size: 0.95rem;
+  }
+  .mesure-nom { color: #555555; }
+  .mesure-valeur { font-weight: bold; text-align: right; }
+  body.nuit #mesures { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); color: #eeeeee; }
+  body.nuit .mesure-nom { color: #aaaaaa; }
 </style>
 </head>
 <body>
@@ -74,6 +102,16 @@
   <span id="curseur-label"></span>
 </div>
 <p id="erreur"></p>
+<!-- Colonne des mesures de la ville recherchée, affichée à droite après une recherche -->
+<aside id="mesures">
+  <h2 id="mesures-ville"></h2>
+  <ul>
+    <li><span class="mesure-nom">Moyenne</span> <span id="mesure-moyenne" class="mesure-valeur"></span></li>
+    <li><span class="mesure-nom">Maximale</span> <span id="mesure-max" class="mesure-valeur"></span></li>
+    <li><span class="mesure-nom">Minimale</span> <span id="mesure-min" class="mesure-valeur"></span></li>
+    <li><span class="mesure-nom">Jours au-dessus de la moyenne</span> <span id="mesure-jours" class="mesure-valeur"></span></li>
+  </ul>
+</aside>
 <!-- Script Leaflet 1.9.4 -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -109,19 +147,40 @@ boutonModeNuit.addEventListener("click", () => {
   }
 });
 
-let marqueur = null; // Référence au texte de température affiché sur la carte
+let marqueur = null; // Texte de température de la ville recherchée
 let donnees = null; // Dernier relevé reçu du serveur (pour changer de date sans recharger)
+let donneesVilles = null; // Relevés des 14 jours de toutes les villes affichées en permanence
+// Groupe de couches contenant le texte de température de chaque ville du fond
+const groupeVilles = L.layerGroup().addTo(carte);
 
 // Échelle de couleur : -10 °C = bleu pur, 40 °C = rouge pur (interpolation linéaire)
 const TEMP_MIN = -10;
 const TEMP_MAX = 40;
-// Renvoie la couleur du texte pour une température, entre bleu (froid) et rouge (chaud)
+// Convertit une couleur HSL (teinte en degrés, saturation et luminosité entre
+// 0 et 1) en chaîne "rgb(r, g, b)" utilisable directement en CSS
+function hslVersRgb(teinte, saturation, luminosite) {
+  const c = (1 - Math.abs(2 * luminosite - 1)) * saturation;
+  const secteur = (teinte % 360) / 60;
+  const x = c * (1 - Math.abs((secteur % 2) - 1));
+  let r = 0, g = 0, b = 0;
+  if (secteur < 1) { r = c; g = x; }
+  else if (secteur < 2) { r = x; g = c; }
+  else if (secteur < 3) { g = c; b = x; }
+  else if (secteur < 4) { g = x; b = c; }
+  else if (secteur < 5) { r = x; b = c; }
+  else { r = c; b = x; }
+  const m = luminosite - c / 2;
+  return "rgb(" + Math.round((r + m) * 255) + ", " + Math.round((g + m) * 255)
+         + ", " + Math.round((b + m) * 255) + ")";
+}
+// Renvoie la couleur du texte pour une température : teintes vives et saturées,
+// du bleu (froid) au rouge (chaud) en passant par un magenta très visible
 function couleurTemperature(temp) {
   let part = (temp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN);
   part = Math.max(0, Math.min(1, part)); // On reste dans l'échelle, même hors bornes
-  const rouge = Math.round(255 * part);
-  const bleu = Math.round(255 * (1 - part));
-  return "rgb(" + rouge + ", 0, " + bleu + ")";
+  // Teinte de 240° (bleu) à 0° (rouge) en passant par 300° (magenta)
+  const teinte = (240 + 120 * part) % 360;
+  return hslVersRgb(teinte, 1, 0.5);
 }
 
 // Formate une date au format AAAA-MM-JJ (clés des relevés retournés par l'API)
@@ -168,13 +227,78 @@ function afficherTemperature() {
   }
   marqueur = L.marker([donnees.latitude, donnees.longitude], {
     icon: L.divIcon({
-      className: "temperature-carte",
+      className: "temperature-recherchee",
       html: '<span style="color:' + couleurTemperature(temperature) + '">'
             + temperature + " °C</span>",
-      iconSize: [90, 28],   // Taille fixe du conteneur...
-      iconAnchor: [45, 14]  // ...ancré au centre, sur l'emplacement de la ville
+      iconSize: [110, 30],   // Conteneur plus grand que ceux du fond...
+      iconAnchor: [55, 15]   // ...ancré au centre, sur l'emplacement de la ville
     })
   }).addTo(carte);
+}
+
+// Une ville du fond est « la ville recherchée » si elle se trouve à moins
+// d'environ 15 km des coordonnées reçues du serveur (le géocodage est plus
+// précis que les coordonnées du fichier villes.json)
+function estVilleRecherchee(ville) {
+  if (donnees === null) {
+    return false;
+  }
+  const dx = ville.latitude - donnees.latitude;
+  const dy = ville.longitude - donnees.longitude;
+  return Math.sqrt(dx * dx + dy * dy) < 0.15;
+}
+
+// Pose le texte de température de chaque ville du fond, pour la date du
+// curseur. La ville recherchée est exclue : elle est affichée à part, en plus grand.
+function afficherVilles() {
+  if (donneesVilles === null) {
+    return;
+  }
+  groupeVilles.clearLayers();
+  const date = dateDepuisIndex(Number(curseur.value));
+  for (const ville of donneesVilles) {
+    if (estVilleRecherchee(ville)) {
+      continue;
+    }
+    const temperature = ville.releves[date];
+    if (temperature === undefined) {
+      continue;
+    }
+    L.marker([ville.latitude, ville.longitude], {
+      icon: L.divIcon({
+        className: "temperature-carte",
+        html: '<span style="color:' + couleurTemperature(temperature) + '">'
+              + temperature + " °C</span>",
+        iconSize: [70, 20],   // Texte plus discret que celui de la ville recherchée
+        iconAnchor: [35, 10]
+      })
+    }).addTo(groupeVilles);
+  }
+}
+
+// Au chargement de la page, on récupère les relevés de toutes les villes :
+// leurs températures restent affichées en permanence, même après une recherche
+fetch("/temperatures-villes").then(reponse => reponse.json()).then(data => {
+  donneesVilles = data;
+  afficherVilles();
+});
+
+// Formate une date ISO (AAAA-MM-JJ) en date lisible, ex : « 2 janv. »
+function formaterDate(iso) {
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+// Affiche les mesures de la ville recherchée dans la colonne de droite
+function afficherMesures(data) {
+  document.getElementById("mesures-ville").textContent = data.ville;
+  document.getElementById("mesure-moyenne").textContent = data.mesures.moyenne + " °C";
+  document.getElementById("mesure-max").textContent =
+    data.mesures.max.temperature + " °C le " + formaterDate(data.mesures.max.jour);
+  document.getElementById("mesure-min").textContent =
+    data.mesures.min.temperature + " °C le " + formaterDate(data.mesures.min.jour);
+  document.getElementById("mesure-jours").textContent =
+    data.mesures.jours_au_dessus_moyenne + " / " + Object.keys(data.releves).length;
+  document.getElementById("mesures").classList.add("visible");
 }
 
 document.getElementById("recherche").addEventListener("submit", async (evenement) => {
@@ -192,11 +316,15 @@ document.getElementById("recherche").addEventListener("submit", async (evenement
   donnees = data;
   // Centrer la carte sur la ville recherchée
   carte.setView([data.latitude, data.longitude], 10);
+  afficherVilles(); // Le fond exclut désormais la ville recherchée
   afficherTemperature();
+  afficherMesures(data); // Les mesures apparaissent dans la colonne de droite
 });
 
-// Le curseur met à jour le texte dès qu'on le déplace
+// Le curseur met à jour les textes dès qu'on le déplace : toutes les villes
+// du fond suivent la date choisie, comme la ville recherchée
 curseur.addEventListener("input", () => {
+  afficherVilles();
   if (donnees !== null) {
     afficherTemperature();
   }
