@@ -27,6 +27,17 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
   #erreur:empty { display: none; }
+  /* Texte de température posé directement sur la carte (pas d'info-bulle) */
+  .temperature-carte {
+    font-size: 1.3rem; font-weight: bold; line-height: 28px;
+    text-align: center; white-space: nowrap;
+    /* Halo blanc pour rester lisible sur les tuiles claires */
+    text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+  }
+  /* En mode nuit, le halo devient noir pour contraster avec le fond sombre */
+  body.nuit .temperature-carte {
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  }
   /* Mode nuit : thème sombre appliqué quand <body> porte la classe "nuit" */
   body.nuit { background: #121212; }
   body.nuit #recherche { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); }
@@ -83,7 +94,19 @@ boutonModeNuit.addEventListener("click", () => {
   }
 });
 
-let marqueur = null; // Référence au marqueur actuel
+let marqueur = null; // Référence au texte de température affiché sur la carte
+
+// Échelle de couleur : -10 °C = bleu pur, 40 °C = rouge pur (interpolation linéaire)
+const TEMP_MIN = -10;
+const TEMP_MAX = 40;
+// Renvoie la couleur du texte pour une température, entre bleu (froid) et rouge (chaud)
+function couleurTemperature(temp) {
+  let part = (temp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN);
+  part = Math.max(0, Math.min(1, part)); // On reste dans l'échelle, même hors bornes
+  const rouge = Math.round(255 * part);
+  const bleu = Math.round(255 * (1 - part));
+  return "rgb(" + rouge + ", 0, " + bleu + ")";
+}
 
 // Formate une date au format AAAA-MM-JJ (clés des relevés retournés par l'API)
 function versISO(date) {
@@ -139,15 +162,20 @@ document.getElementById("recherche").addEventListener("submit", async (evenement
   }
   // Centrer la carte sur la ville recherchée
   carte.setView([data.latitude, data.longitude], 10);
-  // Remplacer l'ancien marqueur par un nouveau
+  // Remplacer l'ancien texte par un nouveau
   if (marqueur !== null) {
     carte.removeLayer(marqueur);
   }
-  // Info-bulle : nom de la ville et température du jour choisi
-  marqueur = L.marker([data.latitude, data.longitude])
-    .addTo(carte)
-    .bindPopup(data.ville + " — " + date + " : " + temperature + " °C")
-    .openPopup();
+  // La température est posée directement sur la carte, en texte coloré (pas d'info-bulle)
+  marqueur = L.marker([data.latitude, data.longitude], {
+    icon: L.divIcon({
+      className: "temperature-carte",
+      html: '<span style="color:' + couleurTemperature(temperature) + '">'
+            + temperature + " °C</span>",
+      iconSize: [90, 28],   // Taille fixe du conteneur...
+      iconAnchor: [45, 14]  // ...ancré au centre, sur l'emplacement de la ville
+    })
+  }).addTo(carte);
 });
 </script>
 </body>
