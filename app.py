@@ -6,7 +6,8 @@ import time
 
 from flask import Flask, Response, jsonify, render_template, request
 
-from meteo import charger_releves, charger_releves_villes, localiser
+from meteo import (charger_releves, charger_releves_villes, jour_le_plus_chaud,
+                   jour_le_plus_froid, jours_au_dessus, localiser, moyenne)
 
 app = Flask(__name__)
 
@@ -41,11 +42,21 @@ def temperatures() -> Response | tuple[Response, int]:
         return jsonify({"erreur": f"Ville introuvable : {ville}"}), 404
     except RuntimeError as e:
         return jsonify({"erreur": f"Problème de connexion à l'API : {e}"}), 502
+    # Mesures calculées avec les fonctions de meteo.py (affichées dans la colonne de droite)
+    temp_moyenne = moyenne(releves)
+    temp_max, jour_max = jour_le_plus_chaud(releves)
+    temp_min, jour_min = jour_le_plus_froid(releves)
     return jsonify({
         "ville": ville,
         "latitude": latitude,
         "longitude": longitude,
-        "releves": releves
+        "releves": releves,
+        "mesures": {
+            "moyenne": temp_moyenne,
+            "max": {"temperature": temp_max, "jour": jour_max},
+            "min": {"temperature": temp_min, "jour": jour_min},
+            "jours_au_dessus_moyenne": jours_au_dessus(releves, temp_moyenne)
+        }
     })
 
 @app.route("/temperatures-villes")

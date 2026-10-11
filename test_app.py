@@ -39,7 +39,13 @@ def test_temperatures_succes():
         "ville": "Toulon",
         "latitude": 43.12,
         "longitude": 5.93,
-        "releves": releves
+        "releves": releves,
+        "mesures": {
+            "moyenne": 11.25,
+            "max": {"temperature": 12.5, "jour": "2024-01-02"},
+            "min": {"temperature": 10.0, "jour": "2024-01-01"},
+            "jours_au_dessus_moyenne": 1
+        }
     }
 
 def test_temperatures_ville_defaut():
@@ -53,7 +59,13 @@ def test_temperatures_ville_defaut():
         "ville": "Toulon",
         "latitude": 43.12,
         "longitude": 5.93,
-        "releves": releves
+        "releves": releves,
+        "mesures": {
+            "moyenne": 11.25,
+            "max": {"temperature": 12.5, "jour": "2024-01-02"},
+            "min": {"temperature": 10.0, "jour": "2024-01-01"},
+            "jours_au_dessus_moyenne": 1
+        }
     }
 
 def test_ville_introuvable():
