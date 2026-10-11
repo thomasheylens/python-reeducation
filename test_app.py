@@ -17,6 +17,16 @@ def test_page_accueil_mode_nuit():
     assert b"Mode nuit" in response.data
     assert b"World_Dark_Gray_Base" in response.data
 
+def test_page_curseur_date_et_texte_carte():
+    # Le curseur remplace l'ancienne liste déroulante et l'info-bulle disparaît
+    response = client_test.get("/")
+    assert response.status_code == 200
+    assert b'id="curseur-date"' in response.data
+    assert b'type="range"' in response.data
+    assert b'<select id="date">' not in response.data
+    assert b"temperature-carte" in response.data
+    assert b"bindPopup" not in response.data
+
 def test_temperatures_succes():
     releves = {"2024-01-01": 10.0, "2024-01-02": 12.5}
     with patch("app.localiser", return_value=(43.12, 5.93)) as mock_localiser, \
