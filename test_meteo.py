@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import patch
 import urllib.error
 from meteo import (moyenne, jour_le_plus_chaud, jours_au_dessus, jour_le_plus_froid,
-                   charger_releves, localiser)
+                   charger_releves, charger_releves_villes, localiser)
 
 def test_moyenne():
     releves = {"2024-01-01": 10.0, "2024-01-02": 20.0, "2024-01-03": 30.0}
@@ -103,3 +103,35 @@ def test_jour_le_plus_froid_egalite():
     min_temp, min_jour = jour_le_plus_froid({"2024-01-01": 5.0, "2024-01-02": 5.0, "2024-01-03": 10.0})
     assert min_temp == 5.0
     assert min_jour == "2024-01-01"
+
+def test_charger_releves_villes():
+    """Plusieurs villes sont chargées en parallèle, chacune avec ses relevés."""
+    villes = [
+        {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93},
+        {"nom": "Lille", "latitude": 50.63, "longitude": 3.06},
+    ]
+    releves = {"2024-01-01": 10.0}
+    with patch("meteo.charger_releves", return_value=releves) as mock:
+        resultats = charger_releves_villes(villes)
+    assert mock.call_count == 2
+    assert resultats == [
+        {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93, "releves": releves},
+        {"nom": "Lille", "latitude": 50.63, "longitude": 3.06, "releves": releves},
+    ]
+
+def test_charger_releves_villes_echec_partiel():
+    """Une ville en échec est ignorée sans faire échouer les autres."""
+    def effet(ville, coordonnees=None):
+        if ville == "Inconnue":
+            raise RuntimeError("Échec de connexion")
+        return {"2024-01-01": 10.0}
+    villes = [
+        {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93},
+        {"nom": "Inconnue", "latitude": 0.0, "longitude": 0.0},
+    ]
+    with patch("meteo.charger_releves", side_effect=effet):
+        resultats = charger_releves_villes(villes)
+    assert resultats == [
+        {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93,
+         "releves": {"2024-01-01": 10.0}},
+    ]
