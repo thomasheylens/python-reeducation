@@ -67,6 +67,23 @@
   #curseur-label { font-size: 0.95rem; min-width: 11rem; text-align: center; }
   body.nuit #curseur-conteneur { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); }
   body.nuit #curseur-label { color: #eeeeee; }
+  /* Colonne des mesures à droite, visible seulement après une recherche */
+  #mesures {
+    position: fixed; top: 1rem; right: 1rem; z-index: 1001; width: 270px;
+    background: #fff; padding: 0.75rem 1rem; border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); display: none;
+  }
+  #mesures.visible { display: block; }
+  #mesures h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+  #mesures ul { margin: 0; padding: 0; list-style: none; }
+  #mesures li {
+    display: flex; justify-content: space-between; gap: 0.5rem;
+    padding: 0.25rem 0; font-size: 0.95rem;
+  }
+  .mesure-nom { color: #555555; }
+  .mesure-valeur { font-weight: bold; text-align: right; }
+  body.nuit #mesures { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); color: #eeeeee; }
+  body.nuit .mesure-nom { color: #aaaaaa; }
 </style>
 </head>
 <body>
@@ -85,6 +102,16 @@
   <span id="curseur-label"></span>
 </div>
 <p id="erreur"></p>
+<!-- Colonne des mesures de la ville recherchée, affichée à droite après une recherche -->
+<aside id="mesures">
+  <h2 id="mesures-ville"></h2>
+  <ul>
+    <li><span class="mesure-nom">Moyenne</span> <span id="mesure-moyenne" class="mesure-valeur"></span></li>
+    <li><span class="mesure-nom">Maximale</span> <span id="mesure-max" class="mesure-valeur"></span></li>
+    <li><span class="mesure-nom">Minimale</span> <span id="mesure-min" class="mesure-valeur"></span></li>
+    <li><span class="mesure-nom">Jours au-dessus de la moyenne</span> <span id="mesure-jours" class="mesure-valeur"></span></li>
+  </ul>
+</aside>
 <!-- Script Leaflet 1.9.4 -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -256,6 +283,24 @@ fetch("/temperatures-villes").then(reponse => reponse.json()).then(data => {
   afficherVilles();
 });
 
+// Formate une date ISO (AAAA-MM-JJ) en date lisible, ex : « 2 janv. »
+function formaterDate(iso) {
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+// Affiche les mesures de la ville recherchée dans la colonne de droite
+function afficherMesures(data) {
+  document.getElementById("mesures-ville").textContent = data.ville;
+  document.getElementById("mesure-moyenne").textContent = data.mesures.moyenne + " °C";
+  document.getElementById("mesure-max").textContent =
+    data.mesures.max.temperature + " °C le " + formaterDate(data.mesures.max.jour);
+  document.getElementById("mesure-min").textContent =
+    data.mesures.min.temperature + " °C le " + formaterDate(data.mesures.min.jour);
+  document.getElementById("mesure-jours").textContent =
+    data.mesures.jours_au_dessus_moyenne + " / " + Object.keys(data.releves).length;
+  document.getElementById("mesures").classList.add("visible");
+}
+
 document.getElementById("recherche").addEventListener("submit", async (evenement) => {
   evenement.preventDefault();
   const ville = document.getElementById("ville").value.trim();
@@ -273,6 +318,7 @@ document.getElementById("recherche").addEventListener("submit", async (evenement
   carte.setView([data.latitude, data.longitude], 10);
   afficherVilles(); // Le fond exclut désormais la ville recherchée
   afficherTemperature();
+  afficherMesures(data); // Les mesures apparaissent dans la colonne de droite
 });
 
 // Le curseur met à jour les textes dès qu'on le déplace : toutes les villes

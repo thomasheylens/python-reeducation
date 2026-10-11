@@ -27,6 +27,17 @@ def test_page_curseur_date_et_texte_carte():
     assert b"temperature-carte" in response.data
     assert b"bindPopup" not in response.data
 
+def test_page_colonne_mesures():
+    # La colonne des mesures est présente dans la page, masquée par défaut
+    response = client_test.get("/")
+    assert response.status_code == 200
+    assert b'id="mesures"' in response.data
+    assert b'id="mesure-moyenne"' in response.data
+    assert b'id="mesure-max"' in response.data
+    assert b'id="mesure-min"' in response.data
+    assert b'id="mesure-jours"' in response.data
+    assert b"#mesures.visible" in response.data
+
 def test_temperatures_villes():
     # La route renvoie les relevés de chaque ville du fichier villes.json
     villes = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93}]
