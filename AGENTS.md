@@ -9,8 +9,9 @@ serveur Flask (app.py, port 8000) et une suite de tests pytest. Priorité
 absolue : lisibilité et commentaires pédagogiques en français.
 
 **CONTRAINTES** : Python 3.14, pas de bibliothèque externe sans accord
-explicite. Commits atomiques : une intention par commit, message à
-l'infinitif, compréhensible par un développeur externe.
+explicite. Commits atomiques : une intention par commit, message en une
+seule phrase simple à l'infinitif, 10 mots maximum, sans corps ni
+trailer.
 
 **TÂCHE + FORMAT** : Pour toute demande d'évolution du programme :
 (1) pose-moi exactement 3 questions pour affiner le besoin avant de
