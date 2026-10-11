@@ -17,7 +17,7 @@
     background: #fff; padding: 0.75rem 1rem; border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
-  #ville, #date { padding: 0.5rem; font-size: 1rem; }
+  #ville { padding: 0.5rem; font-size: 1rem; }
   button { padding: 0.5rem 1rem; font-size: 1rem; }
   /* Le message d'erreur flotte sous le formulaire ; invisible quand il est vide */
   #erreur {
@@ -42,9 +42,20 @@
   body.nuit { background: #121212; }
   body.nuit #recherche { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); }
   body.nuit #erreur { background: #1e1e1e; color: #ff8080; }
-  body.nuit #ville, body.nuit #date, body.nuit button {
+  body.nuit #ville, body.nuit button {
     background: #2a2a2a; color: #eeeeee; border: 1px solid #444444;
   }
+  /* Le curseur de date flotte en bas de la page, par-dessus la carte */
+  #curseur-conteneur {
+    position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+    z-index: 1001; display: flex; align-items: center; gap: 0.75rem;
+    background: #fff; padding: 0.75rem 1rem; border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  #curseur-date { width: 280px; }
+  #curseur-label { font-size: 0.95rem; min-width: 11rem; text-align: center; }
+  body.nuit #curseur-conteneur { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); }
+  body.nuit #curseur-label { color: #eeeeee; }
 </style>
 </head>
 <body>
@@ -53,11 +64,15 @@
 <!-- Recherche centrée en haut, par-dessus la carte -->
 <form id="recherche">
   <input id="ville" placeholder="Nom d'une ville" value="Toulon">
-  <select id="date"></select>
   <button type="submit">Afficher</button>
   <!-- Bouton de bascule du mode nuit : type="button" pour ne pas soumettre le formulaire -->
   <button id="mode-nuit" type="button">Mode nuit</button>
 </form>
+<!-- Curseur de date flottant en bas de la page : 14 positions, d'il y a 7 jours à dans 6 jours -->
+<div id="curseur-conteneur">
+  <input type="range" id="curseur-date" min="0" max="13" step="1" value="7">
+  <span id="curseur-label"></span>
+</div>
 <p id="erreur"></p>
 <!-- Script Leaflet 1.9.4 -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -95,6 +110,7 @@ boutonModeNuit.addEventListener("click", () => {
 });
 
 let marqueur = null; // Référence au texte de température affiché sur la carte
+let donnees = null; // Dernier relevé reçu du serveur (pour changer de date sans recharger)
 
 // Échelle de couleur : -10 °C = bleu pur, 40 °C = rouge pur (interpolation linéaire)
 const TEMP_MIN = -10;
@@ -115,59 +131,42 @@ function versISO(date) {
   return date.getFullYear() + "-" + mois + "-" + jour;
 }
 
-// Remplit la liste déroulante avec les 14 jours possibles : 7 passés, 7 à venir
-function remplirDates() {
-  const select = document.getElementById("date");
-  // Option par défaut : aucune date choisie, pour inviter à la sélectionner
-  const invitation = document.createElement("option");
-  invitation.value = "";
-  invitation.textContent = "Choisir une date…";
-  select.appendChild(invitation);
-  const aujourdhui = new Date();
-  for (let decalage = -7; decalage <= 6; decalage++) {
-    const date = new Date(aujourdhui);
-    date.setDate(aujourdhui.getDate() + decalage);
-    const option = document.createElement("option");
-    option.value = versISO(date);
-    option.textContent = date.toLocaleDateString("fr-FR", {
-      weekday: "short", day: "numeric", month: "short"
-    });
-    select.appendChild(option);
-  }
-}
-remplirDates();
+// Le curseur couvre les 14 jours des relevés : index 0 = il y a 7 jours,
+// index 7 = aujourd'hui (position par défaut), index 13 = dans 6 jours
+const curseur = document.getElementById("curseur-date");
+const curseurLabel = document.getElementById("curseur-label");
 
-document.getElementById("recherche").addEventListener("submit", async (evenement) => {
-  evenement.preventDefault();
-  const ville = document.getElementById("ville").value.trim();
-  const date = document.getElementById("date").value;
+// Convertit l'index du curseur (0..13) en date ISO, comme les clés des relevés
+function dateDepuisIndex(index) {
+  const date = new Date();
+  date.setDate(date.getDate() + index - 7);
+  return versISO(date);
+}
+
+// Affiche sous le curseur la date sélectionnée, en toutes lettres
+function majLabelCurseur() {
+  const date = new Date();
+  date.setDate(date.getDate() + Number(curseur.value) - 7);
+  curseurLabel.textContent = date.toLocaleDateString("fr-FR", {
+    weekday: "long", day: "numeric", month: "long"
+  });
+}
+majLabelCurseur();
+
+// Pose (ou re-pose) le texte de température de la date du curseur sur la carte
+function afficherTemperature() {
+  const date = dateDepuisIndex(Number(curseur.value));
+  const temperature = donnees.releves[date];
   const erreur = document.getElementById("erreur");
-  erreur.textContent = "";
-  // La date est obligatoire : on invite l'utilisateur à la choisir
-  if (!date) {
-    erreur.textContent = "Veuillez choisir une date parmi les 14 jours proposés.";
-    return;
-  }
-  const reponse = await fetch("/temperatures?ville=" + encodeURIComponent(ville));
-  const data = await reponse.json();
-  if (!reponse.ok) {
-    erreur.textContent = data.erreur;
-    return;
-  }
-  // Température du jour choisi, parmi les relevés des 14 jours
-  const temperature = data.releves[date];
   if (temperature === undefined) {
     erreur.textContent = "Pas de relevé pour le " + date + ".";
     return;
   }
-  // Centrer la carte sur la ville recherchée
-  carte.setView([data.latitude, data.longitude], 10);
-  // Remplacer l'ancien texte par un nouveau
+  erreur.textContent = "";
   if (marqueur !== null) {
     carte.removeLayer(marqueur);
   }
-  // La température est posée directement sur la carte, en texte coloré (pas d'info-bulle)
-  marqueur = L.marker([data.latitude, data.longitude], {
+  marqueur = L.marker([donnees.latitude, donnees.longitude], {
     icon: L.divIcon({
       className: "temperature-carte",
       html: '<span style="color:' + couleurTemperature(temperature) + '">'
@@ -176,6 +175,31 @@ document.getElementById("recherche").addEventListener("submit", async (evenement
       iconAnchor: [45, 14]  // ...ancré au centre, sur l'emplacement de la ville
     })
   }).addTo(carte);
+}
+
+document.getElementById("recherche").addEventListener("submit", async (evenement) => {
+  evenement.preventDefault();
+  const ville = document.getElementById("ville").value.trim();
+  const erreur = document.getElementById("erreur");
+  erreur.textContent = "";
+  const reponse = await fetch("/temperatures?ville=" + encodeURIComponent(ville));
+  const data = await reponse.json();
+  if (!reponse.ok) {
+    erreur.textContent = data.erreur;
+    return;
+  }
+  // On mémorise les relevés : le curseur pourra ainsi changer de date sans nouvelle requête
+  donnees = data;
+  // Centrer la carte sur la ville recherchée
+  carte.setView([data.latitude, data.longitude], 10);
+  afficherTemperature();
+});
+
+// Le curseur met à jour le texte dès qu'on le déplace
+curseur.addEventListener("input", () => {
+  if (donnees !== null) {
+    afficherTemperature();
+  }
 });
 </script>
 </body>
