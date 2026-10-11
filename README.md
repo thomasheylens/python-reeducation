@@ -5,8 +5,9 @@ Projet d'apprentissage Python. Réapprentissage accompagné par un agent IA. Con
 Calcule des statistiques sur des relevés de température pour une ville donnée.
 Identifie les températures les plus élevées et les plus basses avec leurs dates.
 Compte le nombre de jours où la température dépasse un seuil donné.
-Sert une page web (Flask) qui affiche les températures des 14 jours (7 passés, 7 à venir), avec recherche par ville.
-Affiche une carte interactive (Leaflet/OpenStreetMap) centrée sur la ville recherchée, avec un marqueur indiquant la température du premier jour.
+Sert une page web (Flask) : carte plein écran de France affichant en permanence les températures d'environ 90 villes, sur un curseur de 14 jours (7 passés, 7 à venir).
+La recherche d'une ville la met en évidence et ouvre un panneau de mesures (moyenne, extrêmes, jours au-dessus de la moyenne).
+Échelle de couleurs bleu → rouge (-10 à 40 °C), avec mode nuit.
 
 ## Installation
 git clone https://github.com/thomasheylens/python-reeducation.git
@@ -19,9 +20,10 @@ Exécuter `python app.py` puis ouvrir http://localhost:8000 — dans un Codespac
 
 ## Limites
 Les températures sont des moyennes (max+min)/2, pas des moyennes horaires.
+Les températures des villes sont mises en cache 30 minutes côté serveur.
 
 ## Tests
-Les tests vérifient les calculs de moyenne, les extrêmes, le comptage des jours au-dessus d'un seuil, le géocodage, ainsi que la gestion des erreurs (données manquantes, ville introuvable, problèmes de connexion). La suite s'exécute avec `pytest`.
+Les tests vérifient les calculs de moyenne, les extrêmes, le comptage des jours au-dessus d'un seuil, le géocodage, les routes du serveur (une ville avec mesures, toutes les villes, chargement parallèle) ainsi que la gestion des erreurs (données manquantes, ville introuvable, problèmes de connexion). La suite s'exécute avec `pytest`.
 
 ## Configuration du CLI Vibe
 Le CLI Vibe s'installe automatiquement à la création du conteneur (voir `.devcontainer/devcontainer.json`).
@@ -33,3 +35,5 @@ Les relevés sont stockés dans un dictionnaire unique pour centraliser les donn
 L'API Open-Meteo fournit des données Météo-France sans nécessiter de token ; le géocodage des villes utilise son API de recherche.
 Une erreur explicite est levée si les relevés sont vides pour éviter les calculs incorrects.
 Flask sert la page et l'API ; le serveur écoute sur 0.0.0.0 pour que le port soit transférable depuis un Codespace.
+La liste des villes (plus de 50 000 habitants) est fixée dans `villes.json` ; leur chargement est parallélisé sur 3 fils avec un timeout réseau de 15 secondes, et mis en cache 30 minutes pour ménager l'API.
+Les messages de commit sont limités à une phrase de dix mots.
