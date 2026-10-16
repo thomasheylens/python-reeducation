@@ -49,7 +49,8 @@ def temperatures() -> Response | tuple[Response, int]:
         return jsonify({"erreur": f"Ville introuvable : {ville}"}), 404
     except RuntimeError as e:
         return jsonify({"erreur": f"Problème de connexion à l'API : {e}"}), 502
-    # Mesures calculées avec les fonctions de meteo.py (affichées dans la colonne de droite)
+    # Mesures calculées avec les fonctions de meteo.py
+    # (affichées dans la colonne de droite)
     temp_moyenne = moyenne(releves)
     temp_max, jour_max = jour_le_plus_chaud(releves)
     temp_min, jour_min = jour_le_plus_froid(releves)
@@ -73,7 +74,8 @@ def temperatures_villes() -> Response:
     l'API météo à chaque chargement de la page.
     """
     global _cache_villes
-    if _cache_villes is not None and time.time() - _cache_villes["date"] < DUREE_CACHE_VILLES:
+    if (_cache_villes is not None
+            and time.time() - _cache_villes["date"] < DUREE_CACHE_VILLES):
         return jsonify(_cache_villes["donnees"])
     releves = charger_releves_villes(VILLES)
     _cache_villes = {"date": time.time(), "donnees": releves}
