@@ -25,6 +25,12 @@ Les températures des villes sont mises en cache 30 minutes côté serveur.
 ## Tests
 Les tests vérifient les calculs de moyenne, les extrêmes, le comptage des jours au-dessus d'un seuil, le géocodage, les routes du serveur (une ville avec mesures, toutes les villes, chargement parallèle) ainsi que la gestion des erreurs (données manquantes, ville introuvable, problèmes de connexion). La suite s'exécute avec `pytest`.
 
+## Outils de développement
+Le linter Ruff vérifie les conventions PEP 8, le tri des imports et les pièges classiques :
+pip install -r requirements-dev.txt
+python -m ruff check .
+La correction automatique est disponible : `python -m ruff check . --fix`.
+
 ## Configuration du CLI Vibe
 Le CLI Vibe s'installe automatiquement à la création du conteneur (voir `.devcontainer/devcontainer.json`).
 Le token d'authentification se génère sur la page des extensions Vibe de Mistral Studio : https://chat.mistral.ai/code/extensions

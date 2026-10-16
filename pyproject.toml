@@ -1,0 +1,9 @@
+[tool.ruff]
+# Linter du projet : python -m ruff check .  (à corriger : --fix)
+# Conventions vérifiées : PEP 8 (style), imports triés, pièges classiques.
+line-length = 88
+
+[tool.ruff.lint]
+# E/W : style PEP 8 ; F : erreurs (variables inutilisées, imports cassés) ;
+# I : imports triés ; B : pièges courants (bugbear) ; UP : syntaxe moderne.
+select = ["E", "W", "F", "I", "B", "UP"]
