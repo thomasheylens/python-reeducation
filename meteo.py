@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
 import json
 import sys
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+
 
 def moyenne(releves: dict[str, float]) -> float:
     """Calcule la température moyenne à partir d'un dictionnaire de relevés.

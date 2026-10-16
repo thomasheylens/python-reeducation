@@ -1,9 +1,19 @@
 import json
-import pytest
-from unittest.mock import patch
 import urllib.error
-from meteo import (moyenne, jour_le_plus_chaud, jours_au_dessus, jour_le_plus_froid,
-                   charger_releves, charger_releves_villes, localiser)
+from unittest.mock import patch
+
+import pytest
+
+from meteo import (
+    charger_releves,
+    charger_releves_villes,
+    jour_le_plus_chaud,
+    jour_le_plus_froid,
+    jours_au_dessus,
+    localiser,
+    moyenne,
+)
+
 
 def test_moyenne():
     releves = {"2024-01-01": 10.0, "2024-01-02": 20.0, "2024-01-03": 30.0}
@@ -55,7 +65,8 @@ def test_charger_releves():
                      "2024-01-05", "2024-01-06", "2024-01-07", "2024-01-08",
                      "2024-01-09", "2024-01-10", "2024-01-11", "2024-01-12",
                      "2024-01-13", "2024-01-14"],
-            "temperature_2m_max": [10, 12, 14, 16, 15, 13, 11, 10, 12, 14, 15, 16, 14, 12],
+            "temperature_2m_max": [10, 12, 14, 16, 15, 13, 11, 10,
+                                   12, 14, 15, 16, 14, 12],
             "temperature_2m_min": [2, 3, 5, 7, 6, 4, 3, 2, 4, 6, 7, 8, 6, 4],
         }
     }
@@ -100,7 +111,8 @@ def test_jours_au_dessus():
     assert jours_au_dessus(releves, 20.0) == 0
 
 def test_jour_le_plus_froid_egalite():
-    min_temp, min_jour = jour_le_plus_froid({"2024-01-01": 5.0, "2024-01-02": 5.0, "2024-01-03": 10.0})
+    releves = {"2024-01-01": 5.0, "2024-01-02": 5.0, "2024-01-03": 10.0}
+    min_temp, min_jour = jour_le_plus_froid(releves)
     assert min_temp == 5.0
     assert min_jour == "2024-01-01"
 
