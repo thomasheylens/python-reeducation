@@ -1,9 +1,19 @@
 import json
-import pytest
-from unittest.mock import patch
 import urllib.error
-from meteo import (moyenne, jour_le_plus_chaud, jours_au_dessus, jour_le_plus_froid,
-                   charger_releves, charger_releves_villes, localiser)
+from unittest.mock import patch
+
+import pytest
+
+from meteo import (
+    charger_releves,
+    charger_releves_villes,
+    jour_le_plus_chaud,
+    jour_le_plus_froid,
+    jours_au_dessus,
+    localiser,
+    moyenne,
+)
+
 
 def test_moyenne():
     releves = {"2024-01-01": 10.0, "2024-01-02": 20.0, "2024-01-03": 30.0}

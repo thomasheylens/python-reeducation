@@ -6,8 +6,15 @@ import time
 
 from flask import Flask, Response, jsonify, render_template, request
 
-from meteo import (charger_releves, charger_releves_villes, jour_le_plus_chaud,
-                   jour_le_plus_froid, jours_au_dessus, localiser, moyenne)
+from meteo import (
+    charger_releves,
+    charger_releves_villes,
+    jour_le_plus_chaud,
+    jour_le_plus_froid,
+    jours_au_dessus,
+    localiser,
+    moyenne,
+)
 
 app = Flask(__name__)
 
