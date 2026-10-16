@@ -49,21 +49,25 @@ def temperatures() -> Response | tuple[Response, int]:
         return jsonify({"erreur": f"Ville introuvable : {ville}"}), 404
     except RuntimeError as e:
         return jsonify({"erreur": f"Problème de connexion à l'API : {e}"}), 502
-    # Mesures calculées avec les fonctions de meteo.py
-    # (affichées dans la colonne de droite)
-    temp_moyenne = moyenne(releves)
-    temp_max, jour_max = jour_le_plus_chaud(releves)
-    temp_min, jour_min = jour_le_plus_froid(releves)
+    observations = releves["observations"]
+    previsions = releves["previsions"]
+    # Mesures calculées avec les fonctions de meteo.py, sur les 14 jours
+    # réunis (observations et prévisions) ; affichées dans la colonne de droite
+    tous_les_jours = {**observations, **previsions}
+    temp_moyenne = moyenne(tous_les_jours)
+    temp_max, jour_max = jour_le_plus_chaud(tous_les_jours)
+    temp_min, jour_min = jour_le_plus_froid(tous_les_jours)
     return jsonify({
         "ville": ville,
         "latitude": latitude,
         "longitude": longitude,
-        "releves": releves,
+        "observations": observations,
+        "previsions": previsions,
         "mesures": {
             "moyenne": temp_moyenne,
             "max": {"temperature": temp_max, "jour": jour_max},
             "min": {"temperature": temp_min, "jour": jour_min},
-            "jours_au_dessus_moyenne": jours_au_dessus(releves, temp_moyenne)
+            "jours_au_dessus_moyenne": jours_au_dessus(tous_les_jours, temp_moyenne)
         }
     })
 

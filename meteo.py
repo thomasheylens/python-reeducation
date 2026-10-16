@@ -99,16 +99,16 @@ def localiser(ville: str) -> tuple[float, float]:
 def charger_releves(
     ville: str = "Toulon",
     coordonnees: tuple[float, float] | None = None,
-) -> dict[str, float]:
+) -> dict[str, dict[str, float]]:
     """Charge les relevés de température pour une ville via Open-Meteo.
     Args:
         ville: Nom de la ville (str). Toulon par défaut.
         coordonnees: Couple (latitude, longitude) optionnel. Quand il est fourni,
                      localiser n'est pas appelé (évite un double géocodage).
     Returns:
-        dict: Dictionnaire {date ISO: température} pour les 14 jours :
-              les 7 premiers jours sont des relevés passés (observations),
-              les 7 derniers des prévisions à venir.
+        dict: Deux dictionnaires {date ISO: température} :
+              "observations" pour les 7 jours passés (relevés),
+              "previsions" pour les 7 jours à venir.
               La température est la moyenne de la temp max et min de chaque jour.
     Raises:
         ValueError: Si la ville est introuvable.
@@ -139,7 +139,14 @@ def charger_releves(
     for i in range(len(dates)):
         moyenne_temp = (temp_max[i] + temp_min[i]) / 2
         releves[dates[i]] = round(moyenne_temp, 1)
-    return releves
+    # L'API renvoie d'abord les 7 jours passés, puis les 7 jours à venir :
+    # couper le dictionnaire en deux sépare les observations des prévisions
+    moitie = len(releves) // 2
+    entrees = list(releves.items())
+    return {
+        "observations": dict(entrees[:moitie]),
+        "previsions": dict(entrees[moitie:]),
+    }
 
 def charger_releves_villes(villes: list[dict]) -> list[dict]:
     """Charge les relevés des 14 jours pour plusieurs villes, en parallèle.
@@ -148,7 +155,8 @@ def charger_releves_villes(villes: list[dict]) -> list[dict]:
     Args:
         villes: Liste de dictionnaires {"nom", "latitude", "longitude"}.
     Returns:
-        list: Dictionnaires {"nom", "latitude", "longitude", "releves"}.
+        list: Dictionnaires {"nom", "latitude", "longitude",
+                            "observations", "previsions"}.
               Les villes dont le chargement échoue sont ignorées.
     """
     def releves_d_une_ville(ville: dict) -> dict | None:
@@ -163,7 +171,8 @@ def charger_releves_villes(villes: list[dict]) -> list[dict]:
             "nom": ville["nom"],
             "latitude": ville["latitude"],
             "longitude": ville["longitude"],
-            "releves": releves,
+            "observations": releves["observations"],
+            "previsions": releves["previsions"],
         }
     # 3 fils suffisent : au-delà, l'API Open-Meteo ralentit fortement les requêtes
     with ThreadPoolExecutor(max_workers=3) as pool:
@@ -172,7 +181,9 @@ def charger_releves_villes(villes: list[dict]) -> list[dict]:
 
 if __name__ == "__main__":
     try:
-        releves = charger_releves()
+        donnees = charger_releves()
+        # Les statistiques couvrent les 14 jours (observations + prévisions)
+        releves = {**donnees["observations"], **donnees["previsions"]}
         m = moyenne(releves)
         maxi, jour = jour_le_plus_chaud(releves)
         nb = jours_au_dessus(releves, m)

@@ -212,10 +212,17 @@ function majLabelCurseur() {
 }
 majLabelCurseur();
 
+// Fusionne les observations (7 jours passés) et les prévisions (7 jours à
+// venir) en un seul dictionnaire date -> température : les clés suivent
+// l'ordre chronologique global (7 jours passés, puis 7 jours à venir)
+function fusionnerJours(donnees) {
+  return Object.assign({}, donnees.observations, donnees.previsions);
+}
+
 // Pose (ou re-pose) le texte de température de la date du curseur sur la carte
 function afficherTemperature() {
   const date = dateDepuisIndex(Number(curseur.value));
-  const temperature = donnees.releves[date];
+  const temperature = fusionnerJours(donnees)[date];
   const erreur = document.getElementById("erreur");
   if (temperature === undefined) {
     erreur.textContent = "Pas de relevé pour le " + date + ".";
@@ -260,7 +267,7 @@ function afficherVilles() {
     if (estVilleRecherchee(ville)) {
       continue;
     }
-    const temperature = ville.releves[date];
+    const temperature = fusionnerJours(ville)[date];
     if (temperature === undefined) {
       continue;
     }
@@ -297,7 +304,7 @@ function afficherMesures(data) {
   document.getElementById("mesure-min").textContent =
     data.mesures.min.temperature + " °C le " + formaterDate(data.mesures.min.jour);
   document.getElementById("mesure-jours").textContent =
-    data.mesures.jours_au_dessus_moyenne + " / " + Object.keys(data.releves).length;
+    data.mesures.jours_au_dessus_moyenne + " / " + Object.keys(fusionnerJours(data)).length;
   document.getElementById("mesures").classList.add("visible");
 }
 
