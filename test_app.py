@@ -42,7 +42,8 @@ def test_temperatures_villes():
     # La route renvoie les relevés de chaque ville du fichier villes.json
     villes = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93}]
     donnees = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93,
-                "releves": {"2024-01-01": 10.0}}]
+                "observations": {"2024-01-01": 10.0},
+                "previsions": {"2024-01-08": 12.0}}]
     with patch("app.VILLES", villes), \
          patch("app.charger_releves_villes", return_value=donnees) as mock:
         serveur._cache_villes = None  # Vide le cache entre les tests
@@ -55,7 +56,8 @@ def test_temperatures_villes_cache():
     # Un deuxième appel dans les 30 minutes ne recharge pas les données
     villes = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93}]
     donnees = [{"nom": "Toulon", "latitude": 43.12, "longitude": 5.93,
-                "releves": {"2024-01-01": 10.0}}]
+                "observations": {"2024-01-01": 10.0},
+                "previsions": {"2024-01-08": 12.0}}]
     with patch("app.VILLES", villes), \
          patch("app.charger_releves_villes", return_value=donnees) as mock:
         serveur._cache_villes = None
@@ -65,7 +67,10 @@ def test_temperatures_villes_cache():
     assert response.get_json() == donnees
 
 def test_temperatures_succes():
-    releves = {"2024-01-01": 10.0, "2024-01-02": 12.5}
+    releves = {
+        "observations": {"2024-01-01": 10.0},
+        "previsions": {"2024-01-02": 12.5},
+    }
     with patch("app.localiser", return_value=(43.12, 5.93)) as mock_localiser, \
          patch("app.charger_releves", return_value=releves) as mock_chargement:
         response = client_test.get("/temperatures?ville=Toulon")
@@ -76,7 +81,8 @@ def test_temperatures_succes():
         "ville": "Toulon",
         "latitude": 43.12,
         "longitude": 5.93,
-        "releves": releves,
+        "observations": {"2024-01-01": 10.0},
+        "previsions": {"2024-01-02": 12.5},
         "mesures": {
             "moyenne": 11.25,
             "max": {"temperature": 12.5, "jour": "2024-01-02"},
@@ -86,7 +92,10 @@ def test_temperatures_succes():
     }
 
 def test_temperatures_ville_defaut():
-    releves = {"2024-01-01": 10.0, "2024-01-02": 12.5}
+    releves = {
+        "observations": {"2024-01-01": 10.0},
+        "previsions": {"2024-01-02": 12.5},
+    }
     with patch("app.localiser", return_value=(43.12, 5.93)), \
          patch("app.charger_releves", return_value=releves) as mock_chargement:
         response = client_test.get("/temperatures")
@@ -96,7 +105,8 @@ def test_temperatures_ville_defaut():
         "ville": "Toulon",
         "latitude": 43.12,
         "longitude": 5.93,
-        "releves": releves,
+        "observations": {"2024-01-01": 10.0},
+        "previsions": {"2024-01-02": 12.5},
         "mesures": {
             "moyenne": 11.25,
             "max": {"temperature": 12.5, "jour": "2024-01-02"},

@@ -75,8 +75,17 @@ def test_charger_releves():
          patch("urllib.request.urlopen") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value.read.return_value = corps
         releves = charger_releves("Toulon")
-    assert len(releves) == 14
-    assert releves["2024-01-04"] == 11.5  # (16 + 7) / 2
+    # Les 7 premiers jours forment les observations, les 7 derniers les prévisions
+    assert list(releves["observations"]) == [
+        "2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04",
+        "2024-01-05", "2024-01-06", "2024-01-07",
+    ]
+    assert list(releves["previsions"]) == [
+        "2024-01-08", "2024-01-09", "2024-01-10", "2024-01-11",
+        "2024-01-12", "2024-01-13", "2024-01-14",
+    ]
+    assert releves["observations"]["2024-01-04"] == 11.5  # (16 + 7) / 2
+    assert releves["previsions"]["2024-01-08"] == 6.0  # (10 + 2) / 2
 
 def test_charger_releves_erreur():
     with patch("meteo.localiser", return_value=(43.12, 5.93)), \
@@ -122,13 +131,20 @@ def test_charger_releves_villes():
         {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93},
         {"nom": "Lille", "latitude": 50.63, "longitude": 3.06},
     ]
-    releves = {"2024-01-01": 10.0}
+    releves = {
+        "observations": {"2024-01-01": 10.0},
+        "previsions": {"2024-01-08": 12.0},
+    }
     with patch("meteo.charger_releves", return_value=releves) as mock:
         resultats = charger_releves_villes(villes)
     assert mock.call_count == 2
     assert resultats == [
-        {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93, "releves": releves},
-        {"nom": "Lille", "latitude": 50.63, "longitude": 3.06, "releves": releves},
+        {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93,
+         "observations": releves["observations"],
+         "previsions": releves["previsions"]},
+        {"nom": "Lille", "latitude": 50.63, "longitude": 3.06,
+         "observations": releves["observations"],
+         "previsions": releves["previsions"]},
     ]
 
 def test_charger_releves_villes_echec_partiel():
@@ -136,7 +152,8 @@ def test_charger_releves_villes_echec_partiel():
     def effet(ville, coordonnees=None):
         if ville == "Inconnue":
             raise RuntimeError("Échec de connexion")
-        return {"2024-01-01": 10.0}
+        return {"observations": {"2024-01-01": 10.0},
+                "previsions": {"2024-01-08": 12.0}}
     villes = [
         {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93},
         {"nom": "Inconnue", "latitude": 0.0, "longitude": 0.0},
@@ -145,5 +162,6 @@ def test_charger_releves_villes_echec_partiel():
         resultats = charger_releves_villes(villes)
     assert resultats == [
         {"nom": "Toulon", "latitude": 43.12, "longitude": 5.93,
-         "releves": {"2024-01-01": 10.0}},
+         "observations": {"2024-01-01": 10.0},
+         "previsions": {"2024-01-08": 12.0}},
     ]
