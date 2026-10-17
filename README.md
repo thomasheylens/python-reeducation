@@ -5,7 +5,9 @@ Projet d'apprentissage Python. Réapprentissage accompagné par un agent IA. Con
 Calcule des statistiques sur des relevés de température pour une ville donnée.
 Identifie les températures les plus élevées et les plus basses avec leurs dates.
 Compte le nombre de jours où la température dépasse un seuil donné.
-Sert une page web (Flask) : carte plein écran de France affichant en permanence les températures d'environ 90 villes, sur un curseur de 14 jours (7 passés, 7 à venir).
+Sert une page web (Flask) : carte plein écran de France affichant en permanence les températures d'environ 90 villes, sur un curseur de 14 jours.
+La route `/temperatures?ville=` renvoie, pour une ville, ses coordonnées et ses températures sous deux clés : `observations` (7 jours passés) et `previsions` (7 jours à venir), plus un bloc `mesures` (moyenne, extrêmes, jours au-dessus de la moyenne).
+La route `/temperatures-villes` renvoie la même structure pour toutes les villes du fichier `villes.json`.
 La recherche d'une ville la met en évidence et ouvre un panneau de mesures (moyenne, extrêmes, jours au-dessus de la moyenne).
 Échelle de couleurs bleu → rouge (-10 à 40 °C), avec mode nuit.
 
@@ -37,7 +39,7 @@ Le token d'authentification se génère sur la page des extensions Vibe de Mistr
 Il ne doit jamais être commité dans le dépôt.
 
 ## Choix techniques
-Les relevés sont stockés dans un dictionnaire unique pour centraliser les données.
+Les températures sont séparées en deux dictionnaires distincts — `observations` pour les 7 jours passés, `previsions` pour les 7 jours à venir — pour que le vocabulaire de l'API suive la sémantique des données.
 L'API Open-Meteo fournit des données Météo-France sans nécessiter de token ; le géocodage des villes utilise son API de recherche.
 Une erreur explicite est levée si les relevés sont vides pour éviter les calculs incorrects.
 Flask sert la page et l'API ; le serveur écoute sur 0.0.0.0 pour que le port soit transférable depuis un Codespace.
