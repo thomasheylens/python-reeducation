@@ -27,7 +27,8 @@ si la modification l'exige, et donne-moi le lien à cliquer pour tester.
 
 **GARDE-FOU** : Aucune modification hors du périmètre demandé. Ne touche
 jamais à des fichiers non concernés par la consigne. La suite de tests
-doit être verte avant tout commit. Tu travailles sur ta branche, jamais
+doit être verte et `python -m ruff check .` sans écart avant tout
+commit. Tu travailles sur ta branche, jamais
 directement sur main : la branche est poussée sur le distant pour garder
 la trace du canal. La fusion vers main utilise --no-ff pour laisser un
 commit de fusion explicite, et reste mon geste, sur ma demande explicite ;
